@@ -1,0 +1,36 @@
+/// Maps a champion name to its portrait asset, when one exists.
+/// Champions without an entry fall back to the icon-only card look.
+const Map<String, String> championArt = {
+  'Krogg': 'assets/champions/krogg.png',
+  'Oorgath': 'assets/champions/oorgath.png',
+  'Voltgraven': 'assets/champions/voltgraven.png',
+  'Magmus': 'assets/champions/magmus.png',
+  'Windhorn': 'assets/champions/windhorn.png',
+  'Robotoman': 'assets/champions/robotoman.png',
+  'Demon Knight': 'assets/champions/demon_knight.png',
+  'Kaelvorn the Sovereign': 'assets/champions/kaelvorn.png',
+  'Gao Feng': 'assets/champions/gao_feng.png',
+  'Ironbark': 'assets/champions/ironbark.png',
+  'Forest Child': 'assets/champions/forest_child.png',
+  'Thundric': 'assets/champions/thundric.png',
+  'Talonfire': 'assets/champions/talonfire.png',
+  'Nova': 'assets/champions/nova.png',
+  'Riptide': 'assets/champions/riptide.png',
+  'Thunderboy': 'assets/champions/thunderboy.png',
+  'Vaelric': 'assets/champions/vaelric.png',
+  'Nyx': 'assets/champions/nyx.png',
+  'Mourn': 'assets/champions/mourn.png',
+  'Doku': 'assets/champions/doku.png',
+  'Elder Shen': 'assets/champions/elder_shen.png',
+  'Vorkath': 'assets/champions/vorkath.png',
+  'Tocho': 'assets/champions/tocho.png',
+  'Elowen': 'assets/champions/elowen.png',
+  'Friedrich Blitzberg': 'assets/champions/friedrich_blitzberg.png',
+  'Omnes': 'assets/champions/omnes.png',
+  'The Cosmic Eye': 'assets/champions/cosmic_eye.png',
+  'Cardinal Ashworth': 'assets/champions/cardinal_ashworth.png',
+  'Thalassar': 'assets/champions/thalassar.png',
+  'The Hollow Shepherd': 'assets/champions/hollow_shepherd.png',
+};
+
+String? artFor(String championName) => championArt[championName];
