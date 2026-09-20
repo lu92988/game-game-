@@ -133,6 +133,41 @@ void main() {
       final order = computeRoundOrder(player, enemy, Random(3));
       expect(findSpeedClashes(order, player, enemy), isEmpty);
     });
+
+    test('a three-way tie tosses every champion, whatever the order', () {
+      // One player tank vs two enemy tanks: the tied group is mixed, so all
+      // three take part even when the two same-side tanks land next to each
+      // other in the shuffled order.
+      final player = [
+        _make(id: 'p1', side: Side.player, role: ChampionRole.tank),
+      ];
+      final enemy = [
+        _make(id: 'e1', side: Side.enemy, role: ChampionRole.tank),
+        _make(id: 'e2', side: Side.enemy, role: ChampionRole.tank),
+      ];
+      for (var seed = 0; seed < 30; seed++) {
+        final order = computeRoundOrder(player, enemy, Random(seed));
+        final clashes = findSpeedClashes(order, player, enemy);
+        expect(clashes.length, 2, reason: 'seed $seed, order $order');
+        expect(clashes[0].winner.id, order[0]);
+        expect(clashes[0].loser.id, order[1]);
+        expect(clashes[1].winner.id, order[1]);
+        expect(clashes[1].loser.id, order[2]);
+      }
+    });
+
+    test('a tie group on one side alone stays quiet even with 3 champions', () {
+      final player = [
+        _make(id: 'p1', side: Side.player, role: ChampionRole.tank),
+        _make(id: 'p2', side: Side.player, role: ChampionRole.tank),
+        _make(id: 'p3', side: Side.player, role: ChampionRole.tank),
+      ];
+      final enemy = [
+        _make(id: 'e1', side: Side.enemy, role: ChampionRole.rogue),
+      ];
+      final order = computeRoundOrder(player, enemy, Random(1));
+      expect(findSpeedClashes(order, player, enemy), isEmpty);
+    });
   });
 
   group('getCurrentActor', () {

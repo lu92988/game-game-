@@ -59,12 +59,18 @@ class BattleController extends ChangeNotifier {
   /// impact sparks on the target, not just a generic flash).
   GameElement? lastAttackerElement;
 
-  /// Speed ties between opposing champions still waiting to be shown for the
-  /// current round. Turns are frozen (no enemy action, no player input)
-  /// until the queue empties via [dismissClash].
+  /// The clash being played right now (empty, or exactly one). Turns are
+  /// frozen (no enemy action, no player input) until it is dismissed via
+  /// [dismissClash].
   List<SpeedClash> clashQueue = [];
 
-  /// Changes each time the front of the queue changes, so the overlay can
+  /// Speed ties for the current round that haven't been shown yet. The
+  /// results are already settled by the round's shuffle, but each clash is
+  /// held back until its winner is next to act, so the coin toss happens on
+  /// the turn the tied champions are actually fighting for.
+  List<SpeedClash> _pendingClashes = [];
+
+  /// Changes each time a clash is shown or dismissed, so the overlay can
   /// restart its animation even if two clashes look alike.
   int clashSerial = 0;
 
@@ -95,30 +101,31 @@ class BattleController extends ChangeNotifier {
     log = [openingLine];
     actedIds = [];
     winner = null;
-    _queueClashes();
+    _planClashes();
   }
 
-  void _queueClashes() {
-    clashQueue = findSpeedClashes(roundOrder, player, enemy);
+  void _planClashes() {
+    _pendingClashes = findSpeedClashes(roundOrder, player, enemy);
+    clashQueue = [];
     clashSerial++;
-    for (final c in clashQueue) {
-      _pushLog(
-        'Speed clash! ${c.winner.name} wins the toss over ${c.loser.name} and acts first.',
-      );
-    }
+  }
+
+  /// Removes and returns the pending clash [actor] won, if it's still
+  /// meaningful. A clash whose loser has since died is dropped silently.
+  SpeedClash? _takeClashFor(Champion actor) {
+    final i = _pendingClashes.indexWhere((c) => c.winner.id == actor.id);
+    if (i < 0) return null;
+    final clash = _pendingClashes.removeAt(i);
+    return clash.loser.alive ? clash : null;
   }
 
   /// Called by the clash overlay when its animation ends (or the player
-  /// taps to skip). Once the last clash is gone, play resumes.
+  /// taps to skip). Play resumes with the champion who won the toss.
   void dismissClash() {
     if (clashQueue.isEmpty) return;
-    clashQueue = clashQueue.sublist(1);
+    clashQueue = [];
     clashSerial++;
-    if (clashQueue.isEmpty) {
-      _afterUpdate();
-    } else {
-      notifyListeners();
-    }
+    _afterUpdate();
   }
 
   void resetBattle() {
@@ -365,11 +372,22 @@ class BattleController extends ChangeNotifier {
       roundOrder = computeRoundOrder(player, enemy, _random);
       actedIds = [];
       _pushLog('— New round —');
-      _queueClashes();
+      _planClashes();
       actor = getCurrentActor(roundOrder, actedIds, player, enemy);
     }
 
     if (clashQueue.isNotEmpty) {
+      notifyListeners();
+      return;
+    }
+
+    final clash = _takeClashFor(actor);
+    if (clash != null) {
+      clashQueue = [clash];
+      clashSerial++;
+      _pushLog(
+        'Speed clash! ${clash.winner.name} wins the toss over ${clash.loser.name} and acts first.',
+      );
       notifyListeners();
       return;
     }

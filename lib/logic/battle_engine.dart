@@ -72,23 +72,36 @@ class SpeedClash {
   final Champion loser;
 }
 
-/// Finds every adjacent pair in [order] that shares a SPD value across
-/// opposing sides. Ties within one side are skipped, since which of your own
-/// champions goes first isn't a contest between the two teams.
+/// Finds the coin tosses for every group of equal-SPD champions in [order]
+/// that has champions from both sides. Each adjacent pair in such a group
+/// gets its own clash, including same-side pairs, so a three-way tie (say
+/// two enemy tanks and one of yours) tosses all three rather than leaving
+/// one out. A tie among champions on a single side is skipped, since which
+/// of your own champions goes first isn't a contest between the two teams.
 List<SpeedClash> findSpeedClashes(
   List<String> order,
   List<Champion> player,
   List<Champion> enemy,
 ) {
+  final champs = <Champion>[];
+  for (final id in order) {
+    final c = findChampion(player, id) ?? findChampion(enemy, id);
+    if (c != null) champs.add(c);
+  }
   final clashes = <SpeedClash>[];
-  for (var i = 0; i < order.length - 1; i++) {
-    final a = findChampion(player, order[i]) ?? findChampion(enemy, order[i]);
-    final b =
-        findChampion(player, order[i + 1]) ?? findChampion(enemy, order[i + 1]);
-    if (a == null || b == null) continue;
-    if (a.spd == b.spd && a.side != b.side) {
-      clashes.add(SpeedClash(winner: a, loser: b));
+  var start = 0;
+  while (start < champs.length) {
+    var end = start + 1;
+    while (end < champs.length && champs[end].spd == champs[start].spd) {
+      end++;
     }
+    final group = champs.sublist(start, end);
+    if (group.length > 1 && group.any((c) => c.side != group.first.side)) {
+      for (var i = 0; i < group.length - 1; i++) {
+        clashes.add(SpeedClash(winner: group[i], loser: group[i + 1]));
+      }
+    }
+    start = end;
   }
   return clashes;
 }
