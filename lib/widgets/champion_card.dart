@@ -190,8 +190,7 @@ class _ChampionCardState extends State<ChampionCard>
                                         // their own attack glow; otherwise
                                         // the normal portrait never changes.
                                         (fxActive && _isAttackGlow)
-                                            ? (attackArtFor(champ.name) ??
-                                                  art)
+                                            ? (attackArtFor(champ.name) ?? art)
                                             : art,
                                         fit: BoxFit.cover,
                                         alignment: Alignment.topCenter,
@@ -261,7 +260,7 @@ class _ChampionCardState extends State<ChampionCard>
                                   runSpacing: 2,
                                   children: [
                                     Text(
-                                      'ATK ${champ.atk}',
+                                      '${champ.role.attackLabel} ${champ.role.usesMagic ? champ.mag : champ.atk}',
                                       style: const TextStyle(
                                         fontSize: 10,
                                         color: BattleColors.dim,
@@ -295,7 +294,8 @@ class _ChampionCardState extends State<ChampionCard>
                                     children: [
                                       if (champ.buffs.boost > 0)
                                         _BuffChip(
-                                          text: '+${champ.buffs.boost} ATK/MAG',
+                                          text:
+                                              '+${champ.buffs.boost} ${champ.role.attackLabel}',
                                           color: BattleColors.gold,
                                         ),
                                       if (champ.buffs.defend > 0)
@@ -307,7 +307,7 @@ class _ChampionCardState extends State<ChampionCard>
                                       if (champ.buffs.weaken > 0)
                                         _BuffChip(
                                           text:
-                                              '-${champ.buffs.weaken} ATK/MAG',
+                                              '-${champ.buffs.weaken} ${champ.role.attackLabel}',
                                           color: const Color(0xFFC0503F),
                                           textColor: const Color(0xFFE08A7A),
                                         ),

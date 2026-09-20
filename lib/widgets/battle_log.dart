@@ -28,7 +28,11 @@ class BattleLog extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(vertical: 2),
                   child: Text(
                     entries[i],
-                    style: const TextStyle(fontSize: 13, color: BattleColors.cream, height: 1.2),
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: BattleColors.cream,
+                      height: 1.2,
+                    ),
                   ),
                 ),
               ),

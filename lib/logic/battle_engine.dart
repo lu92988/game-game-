@@ -41,7 +41,11 @@ List<GameItem> drawHand(Random random) {
 /// champions don't always resolve in the same order. `List.sort` in Dart
 /// isn't guaranteed stable, so ties are broken explicitly by the champion's
 /// position in the shuffle rather than relying on sort stability.
-List<String> computeRoundOrder(List<Champion> player, List<Champion> enemy, Random random) {
+List<String> computeRoundOrder(
+  List<Champion> player,
+  List<Champion> enemy,
+  Random random,
+) {
   final all = [...player, ...enemy].where((c) => c.alive).toList();
   final shuffled = [...all];
   for (var i = shuffled.length - 1; i > 0; i--) {
@@ -57,6 +61,36 @@ List<String> computeRoundOrder(List<Champion> player, List<Champion> enemy, Rand
     return a.compareTo(b);
   });
   return indices.map((i) => shuffled[i].id).toList();
+}
+
+/// A speed tie between champions on opposite sides, already settled by the
+/// round's shuffle: [winner] acts before [loser].
+class SpeedClash {
+  const SpeedClash({required this.winner, required this.loser});
+
+  final Champion winner;
+  final Champion loser;
+}
+
+/// Finds every adjacent pair in [order] that shares a SPD value across
+/// opposing sides. Ties within one side are skipped, since which of your own
+/// champions goes first isn't a contest between the two teams.
+List<SpeedClash> findSpeedClashes(
+  List<String> order,
+  List<Champion> player,
+  List<Champion> enemy,
+) {
+  final clashes = <SpeedClash>[];
+  for (var i = 0; i < order.length - 1; i++) {
+    final a = findChampion(player, order[i]) ?? findChampion(enemy, order[i]);
+    final b =
+        findChampion(player, order[i + 1]) ?? findChampion(enemy, order[i + 1]);
+    if (a == null || b == null) continue;
+    if (a.spd == b.spd && a.side != b.side) {
+      clashes.add(SpeedClash(winner: a, loser: b));
+    }
+  }
+  return clashes;
 }
 
 /// Walks the initiative order and returns the first living champion who
@@ -83,7 +117,7 @@ class DamageResult {
 }
 
 /// ```
-/// baseStat = (role == Mage) ? MAG : ATK
+/// baseStat = (role == Mage || role == Healer) ? MAG : ATK
 /// boosted  = baseStat + boost - weaken
 /// effDef   = target.DEF + target.defendBuff
 ///
@@ -96,14 +130,16 @@ class DamageResult {
 /// Tanks take half damage from crits specifically (not normal hits).
 DamageResult calculateDamage(Champion actor, Champion target, Random random) {
   final isCrit = rollCrit(actor, random);
-  final baseStat = actor.role == ChampionRole.mage ? actor.mag : actor.atk;
+  final baseStat = actor.role.usesMagic ? actor.mag : actor.atk;
   final boosted = baseStat + actor.buffs.boost - actor.buffs.weaken;
   final effDef = target.def + target.buffs.defend;
 
   int dmg;
   if (isCrit) {
     final rawCrit = max(2, (boosted * 1.5 - effDef / 2).round());
-    dmg = target.role == ChampionRole.tank ? max(2, (rawCrit / 2).round()) : rawCrit;
+    dmg = target.role == ChampionRole.tank
+        ? max(2, (rawCrit / 2).round())
+        : rawCrit;
   } else {
     dmg = max(1, boosted - effDef);
   }

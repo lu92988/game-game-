@@ -6,6 +6,7 @@ import '../theme/battle_colors.dart';
 import '../widgets/arena_background.dart';
 import '../widgets/ornate_divider.dart';
 import 'draft_screen.dart';
+import 'how_to_play_screen.dart';
 
 /// The game's title screen — first thing the player sees. A single way
 /// forward (into the draft), no settings/menu items yet since none exist.
@@ -51,13 +52,21 @@ class _MenuScreenState extends State<MenuScreen> {
                       const Text(
                         'THE ARENA OF ANCIENT POWERS',
                         textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 13, letterSpacing: 3, color: BattleColors.gold),
+                        style: TextStyle(
+                          fontSize: 13,
+                          letterSpacing: 3,
+                          color: BattleColors.gold,
+                        ),
                       ),
                       const SizedBox(height: 10),
                       const Text(
                         'Champion Draft Battle',
                         textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 42, color: BattleColors.cream, fontWeight: FontWeight.w600),
+                        style: TextStyle(
+                          fontSize: 42,
+                          color: BattleColors.cream,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                       const SizedBox(height: 14),
                       const OrnateDivider(),
@@ -66,30 +75,76 @@ class _MenuScreenState extends State<MenuScreen> {
                         'Draft three champions. Master speed, elements, and the turn order.\n'
                         'Only one side leaves the arena.',
                         textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 14, color: BattleColors.muted, height: 1.5),
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: BattleColors.muted,
+                          height: 1.5,
+                        ),
                       ),
                       const SizedBox(height: 36),
                       ElevatedButton(
                         onPressed: () {
                           MusicController.instance.ensureStarted();
                           Navigator.of(context).push(
-                            MaterialPageRoute(builder: (_) => const DraftScreen()),
+                            MaterialPageRoute(
+                              builder: (_) => const DraftScreen(),
+                            ),
                           );
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: BattleColors.gold,
                           foregroundColor: const Color(0xFF14121A),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-                          padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 16),
-                          textStyle: const TextStyle(fontSize: 15, letterSpacing: 1),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 36,
+                            vertical: 16,
+                          ),
+                          textStyle: const TextStyle(
+                            fontSize: 15,
+                            letterSpacing: 1,
+                          ),
                         ),
                         child: const Text('Enter the Arena'),
                       ),
                       const SizedBox(height: 14),
+                      OutlinedButton(
+                        onPressed: () {
+                          MusicController.instance.ensureStarted();
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => const HowToPlayScreen(),
+                            ),
+                          );
+                        },
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: BattleColors.cream,
+                          side: const BorderSide(color: BattleColors.gold),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 36,
+                            vertical: 14,
+                          ),
+                          textStyle: const TextStyle(
+                            fontSize: 14,
+                            letterSpacing: 1,
+                          ),
+                        ),
+                        child: const Text('How to Play'),
+                      ),
+                      const SizedBox(height: 10),
                       TextButton(
                         onPressed: () => SystemNavigator.pop(),
-                        style: TextButton.styleFrom(foregroundColor: BattleColors.muted),
-                        child: const Text('Exit', style: TextStyle(fontSize: 13, letterSpacing: 1)),
+                        style: TextButton.styleFrom(
+                          foregroundColor: BattleColors.muted,
+                        ),
+                        child: const Text(
+                          'Exit',
+                          style: TextStyle(fontSize: 13, letterSpacing: 1),
+                        ),
                       ),
                       const SizedBox(height: 40),
                     ],

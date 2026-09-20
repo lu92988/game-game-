@@ -59,7 +59,9 @@ class _ItemButton extends StatelessWidget {
         decoration: BoxDecoration(
           color: isPending ? const Color(0xFF3A3242) : BattleColors.panel,
           borderRadius: BorderRadius.circular(6),
-          border: Border.all(color: isPending ? BattleColors.gold : BattleColors.panelBorder),
+          border: Border.all(
+            color: isPending ? BattleColors.gold : BattleColors.panelBorder,
+          ),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -78,7 +80,8 @@ class _ItemButton extends StatelessWidget {
               item.desc,
               style: TextStyle(
                 fontSize: 11,
-                color: (usable ? BattleColors.cream : const Color(0xFF6B6577)).withAlpha(0xBF),
+                color: (usable ? BattleColors.cream : const Color(0xFF6B6577))
+                    .withAlpha(0xBF),
               ),
             ),
           ],

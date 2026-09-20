@@ -31,7 +31,9 @@ class InitiativeStrip extends StatelessWidget {
         runSpacing: 6,
         children: [
           for (final id in roundOrder)
-            if (findChampion(player, id) ?? findChampion(enemy, id) case final c?) _buildChip(c),
+            if (findChampion(player, id) ?? findChampion(enemy, id)
+                case final c?)
+              _buildChip(c),
         ],
       ),
     );
@@ -62,19 +64,26 @@ class InitiativeStrip extends StatelessWidget {
         decoration: BoxDecoration(
           color: background,
           borderRadius: BorderRadius.circular(4),
-          border: Border.all(color: isCurrent ? BattleColors.gold : BattleColors.panelBorder),
+          border: Border.all(
+            color: isCurrent ? BattleColors.gold : BattleColors.panelBorder,
+          ),
         ),
         child: RichText(
           text: TextSpan(
             style: TextStyle(
               fontSize: 10,
               color: textColor,
-              decoration: c.alive ? TextDecoration.none : TextDecoration.lineThrough,
+              decoration: c.alive
+                  ? TextDecoration.none
+                  : TextDecoration.lineThrough,
               fontFamily: 'Georgia',
             ),
             children: [
               TextSpan(text: c.name),
-              TextSpan(text: ' (${c.spd})', style: TextStyle(color: textColor.withAlpha(0xB3))),
+              TextSpan(
+                text: ' (${c.spd})',
+                style: TextStyle(color: textColor.withAlpha(0xB3)),
+              ),
             ],
           ),
         ),

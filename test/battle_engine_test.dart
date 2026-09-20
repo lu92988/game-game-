@@ -43,7 +43,10 @@ void main() {
       final picks = pickThree(const ['Krogg', 'Oorgath'], random);
       expect(picks.length, 3);
       expect(picks.map((c) => c.name).toSet().length, 3);
-      expect(picks.any((c) => c.name == 'Krogg' || c.name == 'Oorgath'), isFalse);
+      expect(
+        picks.any((c) => c.name == 'Krogg' || c.name == 'Oorgath'),
+        isFalse,
+      );
     });
   });
 
@@ -51,8 +54,19 @@ void main() {
     test('orders living champions fastest first and drops the dead', () {
       final random = Random(1);
       final player = [
-        _make(id: 'p-fast', side: Side.player, role: ChampionRole.rogue, spd: 10),
-        _make(id: 'p-dead', side: Side.player, role: ChampionRole.warrior, spd: 20, alive: false),
+        _make(
+          id: 'p-fast',
+          side: Side.player,
+          role: ChampionRole.rogue,
+          spd: 10,
+        ),
+        _make(
+          id: 'p-dead',
+          side: Side.player,
+          role: ChampionRole.warrior,
+          spd: 20,
+          alive: false,
+        ),
       ];
       final enemy = [
         _make(id: 'e-slow', side: Side.enemy, role: ChampionRole.tank, spd: 3),
@@ -61,15 +75,63 @@ void main() {
       expect(order, ['p-fast', 'e-slow']);
     });
 
-    test('ties are broken by the shuffle, not always the same champion first', () {
-      final player = [_make(id: 'p1', side: Side.player, role: ChampionRole.warrior, spd: 5)];
-      final enemy = [_make(id: 'e1', side: Side.enemy, role: ChampionRole.mage, spd: 5)];
+    test(
+      'ties are broken by the shuffle, not always the same champion first',
+      () {
+        final player = [
+          _make(
+            id: 'p1',
+            side: Side.player,
+            role: ChampionRole.warrior,
+            spd: 5,
+          ),
+        ];
+        final enemy = [
+          _make(id: 'e1', side: Side.enemy, role: ChampionRole.mage, spd: 5),
+        ];
 
-      final seenOrders = <String>{};
-      for (var seed = 0; seed < 30; seed++) {
-        seenOrders.add(computeRoundOrder(player, enemy, Random(seed)).join(','));
+        final seenOrders = <String>{};
+        for (var seed = 0; seed < 30; seed++) {
+          seenOrders.add(
+            computeRoundOrder(player, enemy, Random(seed)).join(','),
+          );
+        }
+        expect(
+          seenOrders.length,
+          2,
+          reason: 'both tie orderings should occur across many seeds',
+        );
+      },
+    );
+  });
+
+  group('findSpeedClashes', () {
+    test('reports a cross-side tie with the earlier actor as the winner', () {
+      final player = [
+        _make(id: 'p1', side: Side.player, role: ChampionRole.rogue),
+      ];
+      final enemy = [
+        _make(id: 'e1', side: Side.enemy, role: ChampionRole.rogue),
+      ];
+      for (var seed = 0; seed < 10; seed++) {
+        final order = computeRoundOrder(player, enemy, Random(seed));
+        final clashes = findSpeedClashes(order, player, enemy);
+        expect(clashes.length, 1);
+        expect(clashes.single.winner.id, order.first);
+        expect(clashes.single.loser.id, order.last);
       }
-      expect(seenOrders.length, 2, reason: 'both tie orderings should occur across many seeds');
+    });
+
+    test('ignores ties within one side and non-tied champions', () {
+      final player = [
+        _make(id: 'p1', side: Side.player, role: ChampionRole.rogue),
+        _make(id: 'p2', side: Side.player, role: ChampionRole.rogue),
+      ];
+      final enemy = [
+        _make(id: 'e1', side: Side.enemy, role: ChampionRole.tank),
+      ];
+      final order = computeRoundOrder(player, enemy, Random(3));
+      expect(findSpeedClashes(order, player, enemy), isEmpty);
     });
   });
 
@@ -77,9 +139,16 @@ void main() {
     test('skips champions who already acted and the dead', () {
       final player = [
         _make(id: 'p1', side: Side.player, role: ChampionRole.warrior),
-        _make(id: 'p2', side: Side.player, role: ChampionRole.mage, alive: false),
+        _make(
+          id: 'p2',
+          side: Side.player,
+          role: ChampionRole.mage,
+          alive: false,
+        ),
       ];
-      final enemy = [_make(id: 'e1', side: Side.enemy, role: ChampionRole.tank)];
+      final enemy = [
+        _make(id: 'e1', side: Side.enemy, role: ChampionRole.tank),
+      ];
       final order = ['p1', 'p2', 'e1'];
 
       expect(getCurrentActor(order, const [], player, enemy)?.id, 'p1');
@@ -99,7 +168,11 @@ void main() {
 
     test('boost and weaken shift the base stat before defense is applied', () {
       final random = Random(7);
-      final base = _make(id: 'a', side: Side.player, role: ChampionRole.warrior);
+      final base = _make(
+        id: 'a',
+        side: Side.player,
+        role: ChampionRole.warrior,
+      );
       final boosted = _make(
         id: 'a',
         side: Side.player,
@@ -127,7 +200,11 @@ void main() {
       }
       expect(critSeed, isNotNull);
 
-      final actor = _make(id: 'a', side: Side.player, role: ChampionRole.warrior);
+      final actor = _make(
+        id: 'a',
+        side: Side.player,
+        role: ChampionRole.warrior,
+      );
       final tank = _make(id: 't', side: Side.enemy, role: ChampionRole.tank);
 
       final tankResult = calculateDamage(actor, tank, Random(critSeed!));

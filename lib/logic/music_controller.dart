@@ -41,6 +41,8 @@ class MusicController {
   }
 
   Future<void> _applyVolume() {
-    return _player.setVolume(musicVolume * AudioSettings.instance.effectiveVolume);
+    return _player.setVolume(
+      musicVolume * AudioSettings.instance.effectiveVolume,
+    );
   }
 }

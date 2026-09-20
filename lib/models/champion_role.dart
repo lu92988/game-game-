@@ -1,6 +1,5 @@
-/// Base stats per role. Mages use MAG instead of ATK for attack damage;
-/// every other role uses ATK. Healers' MAG currently does nothing (heals
-/// are a flat amount, not stat-scaled).
+/// Base stats per role. Mages and Healers attack with MAG instead of ATK;
+/// every other role uses ATK. Heals are a flat amount, not stat-scaled.
 enum ChampionRole {
   warrior(atk: 8, mag: 2, hp: 7, spd: 4, def: 6, critFaces: [10]),
   tank(atk: 3, mag: 2, hp: 9, spd: 3, def: 9, critFaces: []),
@@ -23,6 +22,12 @@ enum ChampionRole {
   final int hp;
   final int spd;
   final int def;
+
+  bool get usesMagic => this == mage || this == healer;
+
+  String get attackLabel => usesMagic ? 'MAG' : 'ATK';
+
+  int get attackStat => usesMagic ? mag : atk;
 
   /// d10 faces (1-10) that count as a critical hit for this role.
   final List<int> critFaces;

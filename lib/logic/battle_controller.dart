@@ -59,6 +59,17 @@ class BattleController extends ChangeNotifier {
   /// impact sparks on the target, not just a generic flash).
   GameElement? lastAttackerElement;
 
+  /// Speed ties between opposing champions still waiting to be shown for the
+  /// current round. Turns are frozen (no enemy action, no player input)
+  /// until the queue empties via [dismissClash].
+  List<SpeedClash> clashQueue = [];
+
+  /// Changes each time the front of the queue changes, so the overlay can
+  /// restart its animation even if two clashes look alike.
+  int clashSerial = 0;
+
+  SpeedClash? get currentClash => clashQueue.isEmpty ? null : clashQueue.first;
+
   List<Champion> get playerAlive => player.where((c) => c.alive).toList();
   List<Champion> get enemyAlive => enemy.where((c) => c.alive).toList();
 
@@ -84,6 +95,30 @@ class BattleController extends ChangeNotifier {
     log = [openingLine];
     actedIds = [];
     winner = null;
+    _queueClashes();
+  }
+
+  void _queueClashes() {
+    clashQueue = findSpeedClashes(roundOrder, player, enemy);
+    clashSerial++;
+    for (final c in clashQueue) {
+      _pushLog(
+        'Speed clash! ${c.winner.name} wins the toss over ${c.loser.name} and acts first.',
+      );
+    }
+  }
+
+  /// Called by the clash overlay when its animation ends (or the player
+  /// taps to skip). Once the last clash is gone, play resumes.
+  void dismissClash() {
+    if (clashQueue.isEmpty) return;
+    clashQueue = clashQueue.sublist(1);
+    clashSerial++;
+    if (clashQueue.isEmpty) {
+      _afterUpdate();
+    } else {
+      notifyListeners();
+    }
   }
 
   void resetBattle() {
@@ -240,6 +275,7 @@ class BattleController extends ChangeNotifier {
   }
 
   void togglePendingItem(GameItem item) {
+    if (clashQueue.isNotEmpty) return;
     pendingItem = identical(pendingItem, item) ? null : item;
     notifyListeners();
   }
@@ -247,7 +283,7 @@ class BattleController extends ChangeNotifier {
   /// The player acts as whichever champion is currently up in the
   /// initiative order.
   void handleTargetClick(Champion target) {
-    if (winner != null) return;
+    if (winner != null || clashQueue.isNotEmpty) return;
     final actor = currentActor;
     if (actor == null || actor.side != Side.player) return;
 
@@ -329,7 +365,13 @@ class BattleController extends ChangeNotifier {
       roundOrder = computeRoundOrder(player, enemy, _random);
       actedIds = [];
       _pushLog('— New round —');
+      _queueClashes();
       actor = getCurrentActor(roundOrder, actedIds, player, enemy);
+    }
+
+    if (clashQueue.isNotEmpty) {
+      notifyListeners();
+      return;
     }
 
     if (actor.side == Side.enemy) {

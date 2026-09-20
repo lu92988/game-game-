@@ -14,7 +14,10 @@ class OrnateDivider extends StatelessWidget {
       children: [
         _line(leading: true),
         const SizedBox(width: 8),
-        Transform.rotate(angle: 0.785398, child: Container(width: 6, height: 6, color: BattleColors.gold)),
+        Transform.rotate(
+          angle: 0.785398,
+          child: Container(width: 6, height: 6, color: BattleColors.gold),
+        ),
         const SizedBox(width: 8),
         _line(leading: false),
       ],
@@ -27,7 +30,9 @@ class OrnateDivider extends StatelessWidget {
       height: 1,
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: leading ? [Colors.transparent, BattleColors.gold] : [BattleColors.gold, Colors.transparent],
+          colors: leading
+              ? [Colors.transparent, BattleColors.gold]
+              : [BattleColors.gold, Colors.transparent],
         ),
       ),
     );

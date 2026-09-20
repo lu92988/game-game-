@@ -9,7 +9,11 @@ import '../theme/battle_colors.dart';
 /// radial vignette so UI text stays readable over the art, plus a faint
 /// scattering of dust/ember motes for extra texture.
 class ArenaBackground extends StatelessWidget {
-  const ArenaBackground({super.key, required this.child, this.imageAsset = 'assets/images/arena_background.png'});
+  const ArenaBackground({
+    super.key,
+    required this.child,
+    this.imageAsset = 'assets/images/arena_background.png',
+  });
 
   final Widget child;
 
@@ -24,7 +28,13 @@ class ArenaBackground extends StatelessWidget {
       decoration: const BoxDecoration(color: BattleColors.bgBottom),
       child: Stack(
         children: [
-          Positioned.fill(child: Image.asset(imageAsset, fit: BoxFit.cover, alignment: Alignment.center)),
+          Positioned.fill(
+            child: Image.asset(
+              imageAsset,
+              fit: BoxFit.cover,
+              alignment: Alignment.center,
+            ),
+          ),
           Positioned.fill(
             child: IgnorePointer(
               child: DecoratedBox(
@@ -57,7 +67,11 @@ class ArenaBackground extends StatelessWidget {
               ),
             ),
           ),
-          Positioned.fill(child: IgnorePointer(child: CustomPaint(painter: const _DustPainter()))),
+          Positioned.fill(
+            child: IgnorePointer(
+              child: CustomPaint(painter: const _DustPainter()),
+            ),
+          ),
           child,
         ],
       ),
@@ -76,7 +90,11 @@ class _DustPainter extends CustomPainter {
       final y = rand.nextDouble() * size.height;
       final r = 0.4 + rand.nextDouble() * 1.3;
       final alpha = (10 + rand.nextDouble() * 26).round();
-      canvas.drawCircle(Offset(x, y), r, Paint()..color = BattleColors.gold.withAlpha(alpha));
+      canvas.drawCircle(
+        Offset(x, y),
+        r,
+        Paint()..color = BattleColors.gold.withAlpha(alpha),
+      );
     }
   }
 

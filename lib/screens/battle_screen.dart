@@ -13,6 +13,7 @@ import '../widgets/initiative_strip.dart';
 import '../widgets/item_hand.dart';
 import '../widgets/ornate_divider.dart';
 import '../widgets/section_label.dart';
+import '../widgets/speed_clash_overlay.dart';
 
 class BattleScreen extends StatefulWidget {
   const BattleScreen({super.key, required this.playerPicks});
@@ -66,82 +67,103 @@ class _BattleScreenState extends State<BattleScreen> {
     final currentActor = controller.currentActor;
     final winner = controller.winner;
 
+    final clash = controller.currentClash;
+
     return Scaffold(
-      body: ArenaBackground(
-        child: SafeArea(
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 900),
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 24,
-                ),
-                child: Column(
-                  children: [
-                    _buildHeader(context),
-                    if (winner != null) _buildWinnerBanner(winner),
-                    if (winner == null)
-                      InitiativeStrip(
-                        roundOrder: controller.roundOrder,
-                        player: controller.player,
-                        enemy: controller.enemy,
-                        actedIds: controller.actedIds,
-                        currentActorId: currentActor?.id,
-                      ),
-                    const SectionLabel(text: 'Opponent'),
-                    _buildRow(
-                      controller.enemy,
-                      clickable:
-                          currentActor != null &&
-                          currentActor.side == Side.player &&
-                          winner == null,
-                      onTap: (c) => controller.handleTargetClick(c),
-                    ),
-                    const SizedBox(height: 12),
-                    const SectionLabel(text: 'Your Team'),
-                    _buildRow(
-                      controller.player,
-                      clickable:
-                          currentActor != null &&
-                          currentActor.side == Side.player &&
-                          winner == null &&
-                          (controller.pendingItem != null ||
-                              (currentActor.role == ChampionRole.healer)),
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          _buildBattle(context, controller, currentActor, winner),
+          if (clash != null)
+            Positioned.fill(
+              child: SpeedClashOverlay(
+                key: ValueKey(controller.clashSerial),
+                clash: clash,
+                onDone: controller.dismissClash,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBattle(
+    BuildContext context,
+    BattleController controller,
+    Champion? currentActor,
+    Side? winner,
+  ) {
+    return ArenaBackground(
+      child: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 900),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+              child: Column(
+                children: [
+                  _buildHeader(context),
+                  if (winner != null) _buildWinnerBanner(winner),
+                  if (winner == null)
+                    InitiativeStrip(
+                      roundOrder: controller.roundOrder,
+                      player: controller.player,
+                      enemy: controller.enemy,
+                      actedIds: controller.actedIds,
                       currentActorId: currentActor?.id,
-                      isPlayerRow: true,
-                      winner: winner,
                     ),
-                    const SizedBox(height: 8),
-                    const SectionLabel(text: 'Hand'),
-                    ItemHand(
-                      hand: controller.hand,
-                      pendingItem: controller.pendingItem,
-                      usable:
-                          currentActor != null &&
-                          currentActor.side == Side.player &&
-                          winner == null,
-                      onSelect: controller.togglePendingItem,
-                    ),
-                    const SizedBox(height: 8),
-                    _buildStatusLine(currentActor, winner),
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 24),
-                      child: Text(
-                        winner == null
-                            ? 'Turn order is set by Speed each round — fastest champions act first.'
-                            : '',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontSize: 11,
-                          color: BattleColors.dim,
-                          letterSpacing: 1,
-                        ),
+                  const SectionLabel(text: 'Opponent'),
+                  _buildRow(
+                    controller.enemy,
+                    clickable:
+                        currentActor != null &&
+                        currentActor.side == Side.player &&
+                        winner == null,
+                    onTap: (c) => controller.handleTargetClick(c),
+                  ),
+                  const SizedBox(height: 12),
+                  const SectionLabel(text: 'Your Team'),
+                  _buildRow(
+                    controller.player,
+                    clickable:
+                        currentActor != null &&
+                        currentActor.side == Side.player &&
+                        winner == null &&
+                        (controller.pendingItem != null ||
+                            (currentActor.role == ChampionRole.healer)),
+                    currentActorId: currentActor?.id,
+                    isPlayerRow: true,
+                    winner: winner,
+                  ),
+                  const SizedBox(height: 8),
+                  const SectionLabel(text: 'Hand'),
+                  ItemHand(
+                    hand: controller.hand,
+                    pendingItem: controller.pendingItem,
+                    usable:
+                        currentActor != null &&
+                        currentActor.side == Side.player &&
+                        winner == null,
+                    onSelect: controller.togglePendingItem,
+                  ),
+                  const SizedBox(height: 8),
+                  _buildStatusLine(currentActor, winner),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 24),
+                    child: Text(
+                      winner == null
+                          ? 'Turn order is set by Speed each round — fastest champions act first.'
+                          : '',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: BattleColors.dim,
+                        letterSpacing: 1,
                       ),
                     ),
-                    BattleLog(entries: controller.log),
-                  ],
-                ),
+                  ),
+                  BattleLog(entries: controller.log),
+                ],
               ),
             ),
           ),

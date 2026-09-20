@@ -32,12 +32,8 @@ class ChampionDraftBattleApp extends StatelessWidget {
         return Overlay(
           initialEntries: [
             OverlayEntry(
-              builder: (context) => Stack(
-                children: [
-                  ?child,
-                  const VolumeControl(),
-                ],
-              ),
+              builder: (context) =>
+                  Stack(children: [?child, const VolumeControl()]),
             ),
           ],
         );

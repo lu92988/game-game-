@@ -22,7 +22,10 @@ class VolumeControl extends StatelessWidget {
             return Material(
               color: Colors.transparent,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: BattleColors.panel.withAlpha(0xD8),
                   borderRadius: BorderRadius.circular(24),
@@ -50,8 +53,12 @@ class VolumeControl extends StatelessWidget {
                       child: SliderTheme(
                         data: SliderTheme.of(context).copyWith(
                           trackHeight: 2,
-                          thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
-                          overlayShape: const RoundSliderOverlayShape(overlayRadius: 12),
+                          thumbShape: const RoundSliderThumbShape(
+                            enabledThumbRadius: 6,
+                          ),
+                          overlayShape: const RoundSliderOverlayShape(
+                            overlayRadius: 12,
+                          ),
                           activeTrackColor: BattleColors.gold,
                           inactiveTrackColor: BattleColors.panelBorder,
                           thumbColor: BattleColors.gold,

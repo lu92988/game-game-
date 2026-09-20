@@ -3,9 +3,10 @@ import 'package:flutter/material.dart';
 import '../theme/battle_colors.dart';
 
 class SectionLabel extends StatelessWidget {
-  const SectionLabel({super.key, required this.text});
+  const SectionLabel({super.key, required this.text, this.style});
 
   final String text;
+  final TextStyle? style;
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +19,7 @@ class SectionLabel extends StatelessWidget {
           fontSize: 11,
           letterSpacing: 1.5,
           color: BattleColors.muted,
-        ),
+        ).merge(style),
       ),
     );
   }
