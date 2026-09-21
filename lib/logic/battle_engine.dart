@@ -5,6 +5,7 @@ import '../data/roster.dart';
 import '../models/champion.dart';
 import '../models/champion_def.dart';
 import '../models/champion_role.dart';
+import '../models/game_balance.dart';
 import '../models/game_element.dart';
 import '../models/game_item.dart';
 import '../models/side.dart';
@@ -181,10 +182,10 @@ const double elementDisadvantageMultiplier = 0.75;
 /// effDef   = target.DEF + target.defendBuff
 ///
 /// if crit:
-///   dmg = max(2, round(boosted * 1.5 - effDef / 2))
-///   if target.role == Tank: dmg = max(2, round(dmg / 2))
+///   dmg = max(minCritDamage, round(boosted * 1.5 - effDef / 2))
+///   if target.role == Tank: dmg = max(minCritDamage, round(dmg / 2))
 /// else:
-///   dmg = max(1, boosted - effDef)
+///   dmg = max(minDamage, boosted - effDef)
 ///
 /// then, by element matchup (Water > Fire > Wind > Earth > Lightning > Water):
 ///   advantage    -> dmg = round(dmg * 1.5)
@@ -199,21 +200,21 @@ DamageResult calculateDamage(Champion actor, Champion target, Random random) {
 
   int dmg;
   if (isCrit) {
-    final rawCrit = max(2, (boosted * 1.5 - effDef / 2).round());
+    final rawCrit = max(minCritDamage, (boosted * 1.5 - effDef / 2).round());
     dmg = target.role == ChampionRole.tank
-        ? max(2, (rawCrit / 2).round())
+        ? max(minCritDamage, (rawCrit / 2).round())
         : rawCrit;
   } else {
-    dmg = max(1, boosted - effDef);
+    dmg = max(minDamage, boosted - effDef);
   }
 
   final matchup = actor.element.matchupAgainst(target.element);
-  final minDamage = isCrit ? 2 : 1;
+  final floor = isCrit ? minCritDamage : minDamage;
   switch (matchup) {
     case ElementMatchup.advantage:
       dmg = max(dmg, (dmg * elementAdvantageMultiplier).round());
     case ElementMatchup.disadvantage:
-      dmg = max(minDamage, (dmg * elementDisadvantageMultiplier).round());
+      dmg = max(floor, (dmg * elementDisadvantageMultiplier).round());
     case ElementMatchup.neutral:
       break;
   }

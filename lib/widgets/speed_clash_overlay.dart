@@ -1,8 +1,12 @@
+import 'dart:async';
 import 'dart:math';
 
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 
+import '../data/audio_settings.dart';
 import '../data/champion_art.dart';
+import '../data/sound_effects.dart';
 import '../logic/battle_engine.dart';
 import '../models/champion.dart';
 import '../models/side.dart';
@@ -33,14 +37,50 @@ class _SpeedClashOverlayState extends State<SpeedClashOverlay>
   late final AnimationController _c;
   bool _finished = false;
 
+  // Sound cues fire once each when the animation passes their moment:
+  // cards fly in (0.04), slam together (0.22), winner revealed (0.84).
+  final List<AudioPlayer> _players = [];
+  bool _swooshPlayed = false;
+  bool _slamPlayed = false;
+  bool _revealPlayed = false;
+
   @override
   void initState() {
     super.initState();
     _c = AnimationController(vsync: this, duration: _duration)
+      ..addListener(_playCues)
       ..addStatusListener((s) {
         if (s == AnimationStatus.completed) _finish();
       })
       ..forward();
+  }
+
+  void _playCues() {
+    final t = _c.value;
+    if (!_swooshPlayed && t >= 0.04) {
+      _swooshPlayed = true;
+      _play(clashSwooshSfx);
+    }
+    if (!_slamPlayed && t >= 0.22) {
+      _slamPlayed = true;
+      _play(clashSlamSfx);
+    }
+    if (!_revealPlayed && t >= 0.84) {
+      _revealPlayed = true;
+      _play(clashRevealSfx);
+    }
+  }
+
+  /// Plays one cue on its own player so it never cuts off the previous one.
+  /// Sound is polish: a missing asset or blocked audio fails silently.
+  void _play(String path) {
+    final volume = AudioSettings.instance.effectiveVolume;
+    if (volume <= 0) return;
+    final player = AudioPlayer();
+    _players.add(player);
+    unawaited(
+      player.play(AssetSource(path), volume: volume).catchError((_) {}),
+    );
   }
 
   void _finish() {
@@ -52,6 +92,9 @@ class _SpeedClashOverlayState extends State<SpeedClashOverlay>
   @override
   void dispose() {
     _c.dispose();
+    for (final player in _players) {
+      player.dispose();
+    }
     super.dispose();
   }
 

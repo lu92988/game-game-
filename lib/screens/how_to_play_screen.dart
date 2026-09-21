@@ -156,12 +156,12 @@ class HowToPlayScreen extends StatelessWidget {
                       children: [
                         _Text(
                           'A normal hit deals **attack stat − target DEF** damage, and '
-                          'always at least **1**. Attack stat is ATK, or MAG for Mages '
+                          'always at least **$minDamage**. Attack stat is ATK, or MAG for Mages '
                           'and Healers.',
                         ),
                         _Text(
                           'A **critical hit** deals about **1.5× the attack stat minus '
-                          'half the target\'s DEF** (minimum 2). Tanks are resilient: '
+                          'half the target\'s DEF** (minimum $minCritDamage). Tanks are resilient: '
                           'a crit against a Tank does only half damage.',
                         ),
                         _Text(

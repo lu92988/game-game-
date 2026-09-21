@@ -16,3 +16,11 @@ const int defendAmount = 3 * statScale;
 
 /// Weaken: subtracted from the target's next attack (base -2).
 const int weakenAmount = 2 * statScale;
+
+/// The least damage a normal hit can deal, however high the target's DEF
+/// (base 1). Scaled with everything else so weak attackers keep the same
+/// proportional chip damage against the doubled HP.
+const int minDamage = 1 * statScale;
+
+/// The least damage a critical hit can deal (base 2).
+const int minCritDamage = 2 * statScale;

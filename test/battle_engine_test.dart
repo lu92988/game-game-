@@ -6,6 +6,7 @@ import 'package:champion_draft_battle/logic/battle_engine.dart';
 import 'package:champion_draft_battle/models/buffs.dart';
 import 'package:champion_draft_battle/models/champion.dart';
 import 'package:champion_draft_battle/models/champion_role.dart';
+import 'package:champion_draft_battle/models/game_balance.dart';
 import 'package:champion_draft_battle/models/game_element.dart';
 import 'package:champion_draft_battle/models/side.dart';
 
@@ -282,8 +283,11 @@ void main() {
       final tankResult = calculateDamage(actor, tank, Random(critSeed!));
       expect(tankResult.isCrit, isTrue);
 
-      final rawCrit = max(2, (actor.atk * 1.5 - tank.def / 2).round());
-      final expectedTankDmg = max(2, (rawCrit / 2).round());
+      final rawCrit = max(
+        minCritDamage,
+        (actor.atk * 1.5 - tank.def / 2).round(),
+      );
+      final expectedTankDmg = max(minCritDamage, (rawCrit / 2).round());
       expect(tankResult.damage, expectedTankDmg);
     });
   });
@@ -374,7 +378,8 @@ void main() {
     });
 
     test('a resisted hit never drops below the minimum damage', () {
-      // Tank ATK 3 vs Tank DEF 9 -> 1 damage; resisting must not make it 0.
+      // A Tank cannot get through another Tank, so every hit sits on the floor;
+      // resisting must not push it below that floor.
       final actor = _make(
         id: 'a',
         side: Side.player,
@@ -389,9 +394,34 @@ void main() {
       );
       for (var seed = 0; seed < 30; seed++) {
         final r = calculateDamage(actor, target, Random(seed));
-        expect(r.damage, greaterThanOrEqualTo(1));
+        expect(
+          r.damage,
+          greaterThanOrEqualTo(r.isCrit ? minCritDamage : minDamage),
+        );
         expect(r.matchup, ElementMatchup.disadvantage);
       }
+    });
+  });
+
+  group('minimum damage', () {
+    test('the floors are the base 1 and 2 scaled by the stat scale', () {
+      expect(minDamage, 1 * statScale);
+      expect(minCritDamage, 2 * statScale);
+    });
+
+    test('a hit that cannot get through defence deals exactly the floor', () {
+      // A Tank's ATK is far below another Tank's DEF, so a normal hit is
+      // stuck on the floor. Find a seed that does not crit.
+      final seed = [
+        for (var s = 0; s < 50; s++)
+          if (!ChampionRole.tank.critFaces.contains(Random(s).nextInt(10) + 1))
+            s,
+      ].first;
+      final actor = _make(id: 'a', side: Side.player, role: ChampionRole.tank);
+      final target = _make(id: 't', side: Side.enemy, role: ChampionRole.tank);
+      final r = calculateDamage(actor, target, Random(seed));
+      expect(r.isCrit, isFalse);
+      expect(r.damage, minDamage);
     });
   });
 }

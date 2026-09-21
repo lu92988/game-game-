@@ -13,3 +13,10 @@ const Map<GameElement, String> elementSfx = {
 };
 
 String? sfxFor(GameElement element) => elementSfx[element];
+
+/// Speed Clash cues, reusing the element sounds: a swoosh as the cards fly
+/// in, a heavy stomp as they slam together, and a thunder crack when the
+/// coin reveals who acts first.
+const String clashSwooshSfx = 'sfx/wind.mp3';
+const String clashSlamSfx = 'sfx/earth.mp3';
+const String clashRevealSfx = 'sfx/lightning.mp3';
