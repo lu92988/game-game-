@@ -155,7 +155,7 @@ class _SpeedClashOverlayState extends State<SpeedClashOverlay>
                         Opacity(
                           opacity: _seg(t, 0.08, 0.18),
                           child: Text(
-                            'Both champions have ${winner.spd} SPD. A coin will decide who acts first.',
+                            'Both champions have ${winner.spd} SPD. A coin decides who acts first, and it stays that way for the whole battle.',
                             textAlign: TextAlign.center,
                             style: bodyStyle(fontSize: 13),
                           ),

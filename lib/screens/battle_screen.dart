@@ -4,6 +4,7 @@ import '../logic/battle_controller.dart';
 import '../models/champion.dart';
 import '../models/champion_def.dart';
 import '../models/champion_role.dart';
+import '../models/game_element.dart';
 import '../models/side.dart';
 import '../theme/battle_colors.dart';
 import '../widgets/arena_background.dart';
@@ -120,6 +121,13 @@ class _BattleScreenState extends State<BattleScreen> {
                         currentActor.side == Side.player &&
                         winner == null,
                     onTap: (c) => controller.handleTargetClick(c),
+                    hintFrom:
+                        currentActor != null &&
+                            currentActor.side == Side.player &&
+                            winner == null &&
+                            controller.pendingItem == null
+                        ? currentActor.element
+                        : null,
                   ),
                   const SizedBox(height: 12),
                   const SectionLabel(text: 'Your Team'),
@@ -279,6 +287,7 @@ class _BattleScreenState extends State<BattleScreen> {
     String? currentActorId,
     bool isPlayerRow = false,
     Side? winner,
+    GameElement? hintFrom,
   }) {
     final controller = _controller;
     final activeId = currentActorId ?? controller.currentActor?.id;
@@ -302,6 +311,10 @@ class _BattleScreenState extends State<BattleScreen> {
             attackerId: controller.lastAttackerId,
             targetId: controller.lastTargetId,
             attackerElement: controller.lastAttackerElement,
+            attackMatchup: controller.lastMatchup,
+            hintMatchup: hintFrom == null || !c.alive
+                ? null
+                : hintFrom.matchupAgainst(c.element),
           ),
       ],
     );

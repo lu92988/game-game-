@@ -1,3 +1,4 @@
+import '../models/game_balance.dart';
 import '../models/game_item.dart';
 
 /// `Heal` was deliberately removed from this pool — healing should only
@@ -7,16 +8,16 @@ const List<GameItem> itemPool = [
   GameItem(
     name: 'Damage Boost',
     type: ItemType.boost,
-    desc: '+3 to next attack',
+    desc: '+$boostAmount to next attack',
   ),
   GameItem(
     name: 'Defense Boost',
     type: ItemType.defend,
-    desc: '+3 Def until the next hit lands',
+    desc: '+$defendAmount Def until the next hit lands',
   ),
   GameItem(
     name: 'Weaken',
     type: ItemType.weaken,
-    desc: 'Target -2 Atk/Mag next turn',
+    desc: 'Target -$weakenAmount Atk/Mag next turn',
   ),
 ];

@@ -21,6 +21,8 @@ class ChampionCard extends StatefulWidget {
     this.attackerId,
     this.targetId,
     this.attackerElement,
+    this.attackMatchup = ElementMatchup.neutral,
+    this.hintMatchup,
   });
 
   final Champion champ;
@@ -40,6 +42,14 @@ class ChampionCard extends StatefulWidget {
   /// The attacking champion's element — used to color the *target's*
   /// impact burst so a hit visibly carries the element that caused it.
   final GameElement? attackerElement;
+
+  /// How the last attack fared on this card when it is the target, shown as
+  /// a brief "Super effective!" / "Resisted" tag during the hit.
+  final ElementMatchup attackMatchup;
+
+  /// While the player is choosing a target: how the acting champion's
+  /// element would fare against this card (null when not applicable).
+  final ElementMatchup? hintMatchup;
 
   @override
   State<ChampionCard> createState() => _ChampionCardState();
@@ -104,7 +114,10 @@ class _ChampionCardState extends State<ChampionCard>
       animation: _fx,
       builder: (context, child) {
         final t = _fx.value;
-        final fxActive = t < 1;
+        // Only while the animation is actually running. A controller that
+        // never ran (or stalled) sits below 1 too, and would leave the white
+        // impact flash / cast effect painted on the card indefinitely.
+        final fxActive = _fx.isAnimating;
 
         List<BoxShadow>? glow;
         if (widget.isCurrent) {
@@ -208,14 +221,26 @@ class _ChampionCardState extends State<ChampionCard>
                                   children: [
                                     Icon(el.icon, size: 14, color: el.color),
                                     const SizedBox(width: 6),
-                                    Text(
-                                      champ.role.name[0].toUpperCase() +
-                                          champ.role.name.substring(1),
-                                      style: const TextStyle(
-                                        fontSize: 10,
-                                        color: BattleColors.muted,
+                                    Flexible(
+                                      child: Text(
+                                        champ.role.name[0].toUpperCase() +
+                                            champ.role.name.substring(1),
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                          fontSize: 10,
+                                          color: BattleColors.muted,
+                                        ),
                                       ),
                                     ),
+                                    if (widget.hintMatchup != null &&
+                                        widget.hintMatchup !=
+                                            ElementMatchup.neutral) ...[
+                                      const SizedBox(width: 6),
+                                      const Spacer(),
+                                      _MatchupHint(
+                                        matchup: widget.hintMatchup!,
+                                      ),
+                                    ],
                                   ],
                                 ),
                               ),
@@ -344,6 +369,23 @@ class _ChampionCardState extends State<ChampionCard>
                               seed: widget.attackNonce,
                             ),
                           ),
+                        if (isImpact &&
+                            widget.attackMatchup != ElementMatchup.neutral)
+                          Positioned(
+                            left: 0,
+                            right: 0,
+                            top: 44,
+                            child: Center(
+                              child: Opacity(
+                                // Pops in at once, holds, then fades out.
+                                opacity: (t < 0.6 ? 1.0 : (1 - (t - 0.6) / 0.4))
+                                    .clamp(0.0, 1.0),
+                                child: _MatchupTag(
+                                  matchup: widget.attackMatchup,
+                                ),
+                              ),
+                            ),
+                          ),
                       ],
                     ),
                   ),
@@ -376,6 +418,55 @@ class _BuffChip extends StatelessWidget {
       child: Text(
         text,
         style: TextStyle(fontSize: 9, color: textColor ?? color),
+      ),
+    );
+  }
+}
+
+/// Small badge shown on an enemy card while you're choosing a target: green
+/// when the acting champion's element beats this one, red when it loses.
+class _MatchupHint extends StatelessWidget {
+  const _MatchupHint({required this.matchup});
+
+  final ElementMatchup matchup;
+
+  @override
+  Widget build(BuildContext context) {
+    final strong = matchup == ElementMatchup.advantage;
+    final color = strong ? const Color(0xFF7BC96F) : const Color(0xFFE08A7A);
+    return Text(
+      strong ? '▲ Strong' : '▼ Weak',
+      style: TextStyle(fontSize: 9, color: color, fontWeight: FontWeight.w700),
+    );
+  }
+}
+
+/// "Super effective!" / "Resisted" pop-up over the target's portrait during
+/// the hit.
+class _MatchupTag extends StatelessWidget {
+  const _MatchupTag({required this.matchup});
+
+  final ElementMatchup matchup;
+
+  @override
+  Widget build(BuildContext context) {
+    final strong = matchup == ElementMatchup.advantage;
+    final color = strong ? const Color(0xFF7BC96F) : const Color(0xFFE08A7A);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: Colors.black.withAlpha(0xCC),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: color),
+      ),
+      child: Text(
+        strong ? 'SUPER EFFECTIVE!' : 'RESISTED',
+        style: TextStyle(
+          fontSize: 10,
+          color: color,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.5,
+        ),
       ),
     );
   }

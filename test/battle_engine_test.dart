@@ -17,13 +17,14 @@ Champion _make({
   int? spd,
   Buffs buffs = const Buffs(),
   bool alive = true,
+  GameElement element = GameElement.fire,
 }) {
   return Champion(
     id: id,
     side: side,
     name: id,
     role: role,
-    element: GameElement.fire,
+    element: element,
     atk: role.atk,
     mag: role.mag,
     def: role.def,
@@ -105,68 +106,104 @@ void main() {
     );
   });
 
-  group('findSpeedClashes', () {
-    test('reports a cross-side tie with the earlier actor as the winner', () {
-      final player = [
-        _make(id: 'p1', side: Side.player, role: ChampionRole.rogue),
-      ];
-      final enemy = [
-        _make(id: 'e1', side: Side.enemy, role: ChampionRole.rogue),
-      ];
-      for (var seed = 0; seed < 10; seed++) {
-        final order = computeRoundOrder(player, enemy, Random(seed));
-        final clashes = findSpeedClashes(order, player, enemy);
-        expect(clashes.length, 1);
-        expect(clashes.single.winner.id, order.first);
-        expect(clashes.single.loser.id, order.last);
-      }
+  group('clashesForTurn', () {
+    Champion tank(String id, Side side) =>
+        _make(id: id, side: side, role: ChampionRole.tank);
+
+    test('a tied opponent who has not acted or clashed yet is a clash', () {
+      final player = [tank('p1', Side.player)];
+      final enemy = [tank('e1', Side.enemy)];
+      final clashes = clashesForTurn(player.first, player, enemy, [], {});
+      expect(clashes.length, 1);
+      expect(clashes.single.winner.id, 'p1');
+      expect(clashes.single.loser.id, 'e1');
     });
 
-    test('ignores ties within one side and non-tied champions', () {
+    test('one turn can open a clash against every tied opponent', () {
+      final player = [tank('p1', Side.player)];
+      final enemy = [tank('e1', Side.enemy), tank('e2', Side.enemy)];
+      final clashes = clashesForTurn(player.first, player, enemy, [], {});
+      expect([for (final c in clashes) c.loser.id], ['e1', 'e2']);
+    });
+
+    test('a pair that has clashed before never clashes again', () {
+      final player = [tank('p1', Side.player)];
+      final enemy = [tank('e1', Side.enemy)];
+      final results = {clashKey('p1', 'e1'): 'e1'};
+      expect(clashesForTurn(enemy.first, player, enemy, [], results), isEmpty);
+      expect(clashesForTurn(player.first, player, enemy, [], results), isEmpty);
+    });
+
+    test(
+      'ignores same-side ties, other speeds, the dead and those who acted',
+      () {
+        final player = [tank('p1', Side.player), tank('p2', Side.player)];
+        final enemy = [
+          _make(id: 'e1', side: Side.enemy, role: ChampionRole.rogue),
+          _make(
+            id: 'e2',
+            side: Side.enemy,
+            role: ChampionRole.tank,
+            alive: false,
+          ),
+          tank('e3', Side.enemy),
+        ];
+        expect(
+          clashesForTurn(player.first, player, enemy, ['e3'], {}),
+          isEmpty,
+        );
+      },
+    );
+  });
+
+  group('computeRoundOrder with remembered clashes', () {
+    test('the remembered winner always goes first, whatever the shuffle', () {
       final player = [
-        _make(id: 'p1', side: Side.player, role: ChampionRole.rogue),
-        _make(id: 'p2', side: Side.player, role: ChampionRole.rogue),
+        _make(id: 'p1', side: Side.player, role: ChampionRole.tank),
       ];
       final enemy = [
         _make(id: 'e1', side: Side.enemy, role: ChampionRole.tank),
       ];
-      final order = computeRoundOrder(player, enemy, Random(3));
-      expect(findSpeedClashes(order, player, enemy), isEmpty);
+      for (final winner in ['p1', 'e1']) {
+        final results = {clashKey('p1', 'e1'): winner};
+        for (var seed = 0; seed < 30; seed++) {
+          final order = computeRoundOrder(
+            player,
+            enemy,
+            Random(seed),
+            clashResults: results,
+          );
+          expect(order.first, winner, reason: 'seed $seed');
+        }
+      }
     });
 
-    test('a three-way tie tosses every champion, whatever the order', () {
-      // One player tank vs two enemy tanks: the tied group is mixed, so all
-      // three take part even when the two same-side tanks land next to each
-      // other in the shuffled order.
+    test('every remembered result holds in a bigger tied group', () {
       final player = [
         _make(id: 'p1', side: Side.player, role: ChampionRole.tank),
+        _make(id: 'p2', side: Side.player, role: ChampionRole.tank),
       ];
       final enemy = [
         _make(id: 'e1', side: Side.enemy, role: ChampionRole.tank),
         _make(id: 'e2', side: Side.enemy, role: ChampionRole.tank),
       ];
-      for (var seed = 0; seed < 30; seed++) {
-        final order = computeRoundOrder(player, enemy, Random(seed));
-        final clashes = findSpeedClashes(order, player, enemy);
-        expect(clashes.length, 2, reason: 'seed $seed, order $order');
-        expect(clashes[0].winner.id, order[0]);
-        expect(clashes[0].loser.id, order[1]);
-        expect(clashes[1].winner.id, order[1]);
-        expect(clashes[1].loser.id, order[2]);
+      final results = {
+        clashKey('p1', 'e1'): 'e1',
+        clashKey('p2', 'e1'): 'p2',
+        clashKey('p2', 'e2'): 'e2',
+      };
+      for (var seed = 0; seed < 40; seed++) {
+        final order = computeRoundOrder(
+          player,
+          enemy,
+          Random(seed),
+          clashResults: results,
+        );
+        expect(order.length, 4);
+        expect(order.indexOf('e1') < order.indexOf('p1'), isTrue);
+        expect(order.indexOf('p2') < order.indexOf('e1'), isTrue);
+        expect(order.indexOf('e2') < order.indexOf('p2'), isTrue);
       }
-    });
-
-    test('a tie group on one side alone stays quiet even with 3 champions', () {
-      final player = [
-        _make(id: 'p1', side: Side.player, role: ChampionRole.tank),
-        _make(id: 'p2', side: Side.player, role: ChampionRole.tank),
-        _make(id: 'p3', side: Side.player, role: ChampionRole.tank),
-      ];
-      final enemy = [
-        _make(id: 'e1', side: Side.enemy, role: ChampionRole.rogue),
-      ];
-      final order = computeRoundOrder(player, enemy, Random(1));
-      expect(findSpeedClashes(order, player, enemy), isEmpty);
     });
   });
 
@@ -248,6 +285,113 @@ void main() {
       final rawCrit = max(2, (actor.atk * 1.5 - tank.def / 2).round());
       final expectedTankDmg = max(2, (rawCrit / 2).round());
       expect(tankResult.damage, expectedTankDmg);
+    });
+  });
+
+  group('element matchups', () {
+    test('the wheel is Water > Fire > Wind > Earth > Lightning > Water', () {
+      expect(GameElement.water.beats, GameElement.fire);
+      expect(GameElement.fire.beats, GameElement.wind);
+      expect(GameElement.wind.beats, GameElement.earth);
+      expect(GameElement.earth.beats, GameElement.lightning);
+      expect(GameElement.lightning.beats, GameElement.water);
+    });
+
+    test('each element has one advantage, one disadvantage, rest neutral', () {
+      for (final a in GameElement.values) {
+        final results = [
+          for (final d in GameElement.values) a.matchupAgainst(d),
+        ];
+        expect(results.where((m) => m == ElementMatchup.advantage).length, 1);
+        expect(
+          results.where((m) => m == ElementMatchup.disadvantage).length,
+          1,
+        );
+        // Same element is neutral, and the pairing is symmetric.
+        expect(a.matchupAgainst(a), ElementMatchup.neutral);
+        for (final d in GameElement.values) {
+          final forward = a.matchupAgainst(d);
+          final back = d.matchupAgainst(a);
+          if (forward == ElementMatchup.advantage) {
+            expect(back, ElementMatchup.disadvantage);
+          } else if (forward == ElementMatchup.disadvantage) {
+            expect(back, ElementMatchup.advantage);
+          } else {
+            expect(back, ElementMatchup.neutral);
+          }
+        }
+      }
+    });
+
+    test('advantage deals 1.5x, disadvantage 0.75x, neutral is unchanged', () {
+      // Find a seed that does not crit (Warriors only crit on a 10).
+      final seed = [
+        for (var s = 0; s < 50; s++)
+          if (Random(s).nextInt(10) + 1 != 10) s,
+      ].first;
+
+      Champion attacker(GameElement el) => _make(
+        id: 'a',
+        side: Side.player,
+        role: ChampionRole.warrior,
+        // Pick the boost so a Warrior hits another Warrior for exactly 8,
+        // whatever the current stat scale is.
+        buffs: Buffs(
+          boost: 8 - (ChampionRole.warrior.atk - ChampionRole.warrior.def),
+        ),
+        element: el,
+      );
+      Champion defender(GameElement el) => _make(
+        id: 't',
+        side: Side.enemy,
+        role: ChampionRole.warrior,
+        element: el,
+      );
+
+      final neutral = calculateDamage(
+        attacker(GameElement.fire),
+        defender(GameElement.fire),
+        Random(seed),
+      );
+      expect(neutral.damage, 8);
+      expect(neutral.matchup, ElementMatchup.neutral);
+
+      final strong = calculateDamage(
+        attacker(GameElement.water),
+        defender(GameElement.fire),
+        Random(seed),
+      );
+      expect(strong.damage, 12);
+      expect(strong.matchup, ElementMatchup.advantage);
+
+      final weak = calculateDamage(
+        attacker(GameElement.fire),
+        defender(GameElement.water),
+        Random(seed),
+      );
+      expect(weak.damage, 6);
+      expect(weak.matchup, ElementMatchup.disadvantage);
+    });
+
+    test('a resisted hit never drops below the minimum damage', () {
+      // Tank ATK 3 vs Tank DEF 9 -> 1 damage; resisting must not make it 0.
+      final actor = _make(
+        id: 'a',
+        side: Side.player,
+        role: ChampionRole.tank,
+        element: GameElement.fire,
+      );
+      final target = _make(
+        id: 't',
+        side: Side.enemy,
+        role: ChampionRole.tank,
+        element: GameElement.water,
+      );
+      for (var seed = 0; seed < 30; seed++) {
+        final r = calculateDamage(actor, target, Random(seed));
+        expect(r.damage, greaterThanOrEqualTo(1));
+        expect(r.matchup, ElementMatchup.disadvantage);
+      }
     });
   });
 }

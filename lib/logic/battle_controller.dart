@@ -10,6 +10,7 @@ import '../data/sound_effects.dart';
 import '../models/champion.dart';
 import '../models/champion_def.dart';
 import '../models/champion_role.dart';
+import '../models/game_balance.dart';
 import '../models/game_element.dart';
 import '../models/game_item.dart';
 import '../models/side.dart';
@@ -59,16 +60,20 @@ class BattleController extends ChangeNotifier {
   /// impact sparks on the target, not just a generic flash).
   GameElement? lastAttackerElement;
 
-  /// The clash being played right now (empty, or exactly one). Turns are
-  /// frozen (no enemy action, no player input) until it is dismissed via
-  /// [dismissClash].
+  /// How the last attack's element fared against its target, so the target's
+  /// card can flash "Super effective!" or "Resisted" along with the hit.
+  ElementMatchup lastMatchup = ElementMatchup.neutral;
+
+  /// The clashes being played on the current turn, front first (usually one,
+  /// more when the acting champion ties with several opponents). Turns are
+  /// frozen (no enemy action, no player input) until they are all dismissed
+  /// via [dismissClash].
   List<SpeedClash> clashQueue = [];
 
-  /// Speed ties for the current round that haven't been shown yet. The
-  /// results are already settled by the round's shuffle, but each clash is
-  /// held back until its winner is next to act, so the coin toss happens on
-  /// the turn the tied champions are actually fighting for.
-  List<SpeedClash> _pendingClashes = [];
+  /// Every Speed Clash so far this battle: pair key -> id of the champion
+  /// who won the toss. A pair only ever clashes once; when the same two tie
+  /// again, [computeRoundOrder] just puts the remembered winner first.
+  final Map<String, String> _clashResults = {};
 
   /// Changes each time a clash is shown or dismissed, so the overlay can
   /// restart its animation even if two clashes look alike.
@@ -95,37 +100,29 @@ class BattleController extends ChangeNotifier {
 
     player = p;
     enemy = e;
+    _clashResults.clear();
     roundOrder = computeRoundOrder(p, e, _random);
     hand = drawHand(_random);
     pendingItem = null;
     log = [openingLine];
     actedIds = [];
     winner = null;
-    _planClashes();
-  }
-
-  void _planClashes() {
-    _pendingClashes = findSpeedClashes(roundOrder, player, enemy);
     clashQueue = [];
     clashSerial++;
-  }
-
-  /// Removes and returns the pending clash [actor] won, if it's still
-  /// meaningful. A clash whose loser has since died is dropped silently.
-  SpeedClash? _takeClashFor(Champion actor) {
-    final i = _pendingClashes.indexWhere((c) => c.winner.id == actor.id);
-    if (i < 0) return null;
-    final clash = _pendingClashes.removeAt(i);
-    return clash.loser.alive ? clash : null;
   }
 
   /// Called by the clash overlay when its animation ends (or the player
-  /// taps to skip). Play resumes with the champion who won the toss.
+  /// taps to skip). Shows the next clash of this turn if there is one,
+  /// otherwise play resumes with the champion who won the toss.
   void dismissClash() {
     if (clashQueue.isEmpty) return;
-    clashQueue = [];
+    clashQueue = clashQueue.sublist(1);
     clashSerial++;
-    _afterUpdate();
+    if (clashQueue.isEmpty) {
+      _afterUpdate();
+    } else {
+      notifyListeners();
+    }
   }
 
   void resetBattle() {
@@ -203,6 +200,7 @@ class BattleController extends ChangeNotifier {
     lastAttackerId = actorLive.id;
     lastTargetId = targetLive.id;
     lastAttackerElement = actorLive.element;
+    lastMatchup = result.matchup;
     attackNonce++;
     _applyDamage(target.side, target.id, result.damage);
 
@@ -226,14 +224,21 @@ class BattleController extends ChangeNotifier {
               ? ' — CRITICAL HIT (dampened by Tank resilience)!'
               : ' — CRITICAL HIT!')
         : '';
+    final elementTag = switch (result.matchup) {
+      ElementMatchup.advantage =>
+        ' ${actorLive.element.name} beats ${targetLive.element.name}: super effective!',
+      ElementMatchup.disadvantage =>
+        ' ${targetLive.element.name} resists ${actorLive.element.name}: not very effective.',
+      ElementMatchup.neutral => '',
+    };
     _pushLog(
-      '${actorLive.name} attacks ${targetLive.name} for ${result.damage} damage$critTag.',
+      '${actorLive.name} attacks ${targetLive.name} for ${result.damage} damage$critTag.$elementTag',
     );
   }
 
   void _performHeal(Champion actor, Champion target) {
     final actorLive = findChampion(_sideList(actor.side), actor.id)!;
-    const healAmt = 3;
+    const healAmt = healAmount;
     _updateChampion(
       target.side,
       target.id,
@@ -251,27 +256,29 @@ class BattleController extends ChangeNotifier {
         _updateChampion(
           target.side,
           target.id,
-          (c) => c.copyWith(buffs: c.buffs.copyWith(boost: 3)),
+          (c) => c.copyWith(buffs: c.buffs.copyWith(boost: boostAmount)),
         );
         _pushLog(
-          '${actor.name} charges up ${target.name} with ${item.name}. Next attack +3.',
+          '${actor.name} charges up ${target.name} with ${item.name}. Next attack +$boostAmount.',
         );
       case ItemType.defend:
         _updateChampion(
           target.side,
           target.id,
-          (c) => c.copyWith(buffs: c.buffs.copyWith(defend: 3)),
+          (c) => c.copyWith(buffs: c.buffs.copyWith(defend: defendAmount)),
         );
         _pushLog(
-          '${target.name} braces with ${item.name}. Def +3 until the next hit lands.',
+          '${target.name} braces with ${item.name}. Def +$defendAmount until the next hit lands.',
         );
       case ItemType.weaken:
         _updateChampion(
           target.side,
           target.id,
-          (c) => c.copyWith(buffs: c.buffs.copyWith(weaken: 2)),
+          (c) => c.copyWith(buffs: c.buffs.copyWith(weaken: weakenAmount)),
         );
-        _pushLog('${actor.name} weakens ${target.name}. -2 Atk/Mag next turn.');
+        _pushLog(
+          '${actor.name} weakens ${target.name}. -$weakenAmount Atk/Mag next turn.',
+        );
     }
 
     final idx = hand.indexOf(item);
@@ -369,10 +376,14 @@ class BattleController extends ChangeNotifier {
 
     var actor = getCurrentActor(roundOrder, actedIds, player, enemy);
     while (actor == null) {
-      roundOrder = computeRoundOrder(player, enemy, _random);
+      roundOrder = computeRoundOrder(
+        player,
+        enemy,
+        _random,
+        clashResults: _clashResults,
+      );
       actedIds = [];
       _pushLog('— New round —');
-      _planClashes();
       actor = getCurrentActor(roundOrder, actedIds, player, enemy);
     }
 
@@ -381,13 +392,26 @@ class BattleController extends ChangeNotifier {
       return;
     }
 
-    final clash = _takeClashFor(actor);
-    if (clash != null) {
-      clashQueue = [clash];
+    // Tied champions who have never faced each other toss now, on the turn
+    // they are fighting over. The result is remembered, so the same pair
+    // never clashes again.
+    final clashes = clashesForTurn(
+      actor,
+      player,
+      enemy,
+      actedIds,
+      _clashResults,
+    );
+    if (clashes.isNotEmpty) {
+      for (final c in clashes) {
+        _clashResults[clashKey(c.winner.id, c.loser.id)] = c.winner.id;
+        _pushLog(
+          'Speed clash! ${c.winner.name} wins the toss over ${c.loser.name} '
+          'and will act first whenever they tie.',
+        );
+      }
+      clashQueue = clashes;
       clashSerial++;
-      _pushLog(
-        'Speed clash! ${clash.winner.name} wins the toss over ${clash.loser.name} and acts first.',
-      );
       notifyListeners();
       return;
     }

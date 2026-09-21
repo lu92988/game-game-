@@ -126,4 +126,69 @@ void main() {
       expect(find.byType(ElementEffectOverlay), findsNothing);
     },
   );
+
+  Future<void> hit(
+    WidgetTester tester,
+    Champion target,
+    ElementMatchup matchup,
+  ) async {
+    await tester.pumpWidget(_wrap(ChampionCard(champ: target, attackNonce: 0)));
+    await tester.pumpWidget(
+      _wrap(
+        ChampionCard(
+          champ: target,
+          attackNonce: 1,
+          attackerId: 'player-0',
+          targetId: 'enemy-0',
+          attackerElement: GameElement.water,
+          attackMatchup: matchup,
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+  }
+
+  testWidgets('a super effective hit tags the target while it plays', (
+    tester,
+  ) async {
+    await hit(tester, _fireChampion('enemy-0'), ElementMatchup.advantage);
+    expect(find.text('SUPER EFFECTIVE!'), findsOneWidget);
+    expect(find.text('RESISTED'), findsNothing);
+
+    await tester.pump(const Duration(seconds: 3));
+    expect(find.text('SUPER EFFECTIVE!'), findsNothing);
+  });
+
+  testWidgets('a resisted hit tags the target, a neutral hit does not', (
+    tester,
+  ) async {
+    await hit(tester, _fireChampion('enemy-0'), ElementMatchup.disadvantage);
+    expect(find.text('RESISTED'), findsOneWidget);
+
+    await tester.pump(const Duration(seconds: 3));
+    await hit(tester, _fireChampion('enemy-0'), ElementMatchup.neutral);
+    expect(find.text('SUPER EFFECTIVE!'), findsNothing);
+    expect(find.text('RESISTED'), findsNothing);
+  });
+
+  testWidgets('the target hint shows strong, weak, or nothing', (tester) async {
+    final card = _fireChampion('enemy-0');
+    for (final entry in {
+      ElementMatchup.advantage: '▲ Strong',
+      ElementMatchup.disadvantage: '▼ Weak',
+    }.entries) {
+      await tester.pumpWidget(
+        _wrap(ChampionCard(champ: card, hintMatchup: entry.key)),
+      );
+      expect(find.text(entry.value), findsOneWidget);
+    }
+    await tester.pumpWidget(
+      _wrap(ChampionCard(champ: card, hintMatchup: ElementMatchup.neutral)),
+    );
+    expect(find.text('▲ Strong'), findsNothing);
+    expect(find.text('▼ Weak'), findsNothing);
+    await tester.pumpWidget(_wrap(ChampionCard(champ: card)));
+    expect(find.text('▲ Strong'), findsNothing);
+  });
 }

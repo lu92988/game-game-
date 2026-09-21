@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/champion_role.dart';
+import '../models/game_balance.dart';
 import '../theme/battle_colors.dart';
 import '../theme/body_style.dart';
 import '../widgets/arena_background.dart';
@@ -96,9 +97,12 @@ class HowToPlayScreen extends StatelessWidget {
                           '**SPD** to lowest. Ties are broken at random.',
                         ),
                         _Text(
-                          'When champions from opposite sides tie on SPD, a **Speed '
-                          'Clash** plays out: their cards collide and a coin toss '
-                          'decides who acts first. Tap to skip the animation.',
+                          'The first time two champions from opposite sides tie on '
+                          'SPD, a **Speed Clash** plays out on the turn they are '
+                          'fighting over: their cards collide and a coin toss '
+                          'decides who acts first. Every pair clashes only once. '
+                          'The winner then acts first whenever those two tie '
+                          'again. Tap to skip the animation.',
                         ),
                         _Text(
                           'The order is rebuilt at the start of each round, so champions '
@@ -117,7 +121,7 @@ class HowToPlayScreen extends StatelessWidget {
                         _Bullet('**Attack** – click an enemy champion.'),
                         _Bullet(
                           '**Heal** – if the acting champion is a Healer, click another '
-                          'ally to restore **3 HP** (never above their max).',
+                          'ally to restore **$healAmount HP** (never above their max).',
                         ),
                         _Bullet(
                           '**Use an item** – click an item in your hand, then click a '
@@ -162,7 +166,8 @@ class HowToPlayScreen extends StatelessWidget {
                         ),
                         _Text(
                           'Boosts, weakens, and defense buffs (below) are applied '
-                          'before this math.',
+                          'before this math. The element bonus or penalty '
+                          '(see Elements) is applied last, to the final damage.',
                         ),
                       ],
                     ),
@@ -174,14 +179,14 @@ class HowToPlayScreen extends StatelessWidget {
                           'acting champion\'s turn, and a new random item replaces it.',
                         ),
                         _Bullet(
-                          '**Damage Boost** – target gets **+3** to their next attack.',
+                          '**Damage Boost** – target gets **+$boostAmount** to their next attack.',
                         ),
                         _Bullet(
-                          '**Defense Boost** – target gets **+3 DEF** until the next '
+                          '**Defense Boost** – target gets **+$defendAmount DEF** until the next '
                           'hit lands on them.',
                         ),
                         _Bullet(
-                          '**Weaken** – target gets **−2 ATK/MAG** on their next attack.',
+                          '**Weaken** – target gets **−$weakenAmount ATK/MAG** on their next attack.',
                         ),
                         _Text(
                           'There is no generic healing item. Only Healers can heal.',
@@ -192,10 +197,26 @@ class HowToPlayScreen extends StatelessWidget {
                       title: 'Elements',
                       children: [
                         _Text(
-                          'Champions are Fire, Water, Earth, Wind, or Lightning. For '
-                          'now an element is flavor only: it sets the champion\'s '
-                          'colors, attack sound, and effects, and has no effect on '
-                          'damage.',
+                          'Champions are Fire, Water, Earth, Wind, or Lightning. An '
+                          'element also sets a champion\'s colors, attack sound, and '
+                          'effects. Elements beat each other in a loop:',
+                        ),
+                        _Bullet('**Water** beats **Fire**'),
+                        _Bullet('**Fire** beats **Wind**'),
+                        _Bullet('**Wind** beats **Earth**'),
+                        _Bullet('**Earth** beats **Lightning**'),
+                        _Bullet('**Lightning** beats **Water**'),
+                        _Text(
+                          'An attack from the winning element is **super effective** '
+                          'and deals **1.5×** damage (rounded). Against the element '
+                          'that beats it, an attack deals only **0.75×**, and always '
+                          'at least the usual minimum. Every other pairing is '
+                          'neutral. Only attacks use elements. Heals and items '
+                          'ignore them.',
+                        ),
+                        _Text(
+                          'On your turn, enemy cards show **▲ Strong** or **▼ Weak** '
+                          'against the champion who is acting.',
                         ),
                       ],
                     ),
