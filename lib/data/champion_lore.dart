@@ -1,108 +1,134 @@
-/// Placeholder lore shown on the draft screen's hover card. Same lookup-map
+/// Champion lore shown on the draft screen's hover card. Same lookup-map
 /// pattern as `champion_art.dart`: a champion without an entry just shows no
 /// description line, so entries can be rewritten or added one at a time.
 const Map<String, String> championLore = {
   // Tanks
   'Krogg':
-      'A river-born toad warrior who wears the armor of the tide. He holds the '
-      'ford against all comers, and nothing has ever crossed it without his leave.',
+      'Brother to Oorgath and one of the two guardians of the ancient library, '
+      'where all the world\'s secrets are kept. Like the tide, he never leaves '
+      'his post, and nothing gets past him.',
   'Oorgath':
-      'An ancient moss-crusted toad who fights as if he were part of the ruins '
-      'around him. Blades break on his hide long before he shows any sign of wear.',
+      'Brother to Krogg and one of the two guardians of the ancient library, '
+      'where all the world\'s secrets are kept. Rooted like the stone around '
+      'him, he has never once let an intruder through.',
   'Voltgraven':
-      'A bronze colossus raised in a forgotten temple, still crackling with the '
-      'storm that woke it. It obeys no master and remembers no war.',
+      'A colossal war machine built by the Enlightened to fight in the Ancient '
+      'War. The war has long since ended, but the storm that powers it has '
+      'never gone quiet.',
   'Magmus':
-      'A faceless giant of molten stone that walked out of a volcano. Wherever '
-      'it stands the ground glows, and what it touches does not cool.',
+      'Forged by Vorkath, the Dark One, from the molten heart of the earth. It '
+      'was made for one purpose only: chaos.',
   'Windhorn':
-      'A rhino knight who charges in the eye of his own storm. The gales in his '
-      'armor push allies forward and turn enemy blows aside.',
+      'Guardian of the monks\' temple high in the mountains, home of Elder Shen '
+      'and Gao Feng. He stands watch at its gates, and no one reaches them '
+      'without first getting past him.',
 
   // Warriors
   'Robotoman':
-      'A war machine with a furnace for a heart. Built for battles long ended, '
-      'it keeps fighting because no one gave the order to stop.',
+      'Just an ordinary accountant, or so he believed. Then destiny came '
+      'calling, and he awoke to the truth: he is the reborn soul of a '
+      'legendary fire warrior.',
   'Demon Knight':
-      'A knight in frost-blue plate who traded his name for a demon\'s power. '
-      'His blade is as cold as the bargain he made.',
+      'An ancient spirit bound to the Dark One. Across hundreds of years of '
+      'war he has never once faltered, and now he stands at his master\'s '
+      'right hand.',
   'Kaelvorn the Sovereign':
-      'A tyrant in gold and black who rules by decree and by lightning. His '
-      'banners promise order, and his armies pay for it.',
+      'Father of Thunderboy, and half-divine himself, he was born with the '
+      'strength to be a great hero. Instead, he bends the knee to the Dark '
+      'One.',
   'Gao Feng':
-      'A veteran monk who fights with a polearm and no wasted motion. He moves '
-      'like the wind through a mountain pass: unhurried until it strikes.',
+      'Right hand to Elder Shen, he wants nothing more than peace and '
+      'stillness. But peace must be protected, so he takes up arms to defend '
+      'the last hope of that dream.',
   'Ironbark':
-      'A treant knight who took up sword and shield when the forest was burned. '
-      'He is slow to anger, and slower to fall.',
+      'Elowen\'s mightiest creation, forged in the days when his master still '
+      'walked with the dark. When Elowen found the light, he could not bring '
+      'Ironbark with him. Now the great guardian of nature is a tool in '
+      'Vorkath\'s hands.',
 
   // Rangers
   'Forest Child':
-      'A spirit archer of the deep woods, raised by roots and moonlight. Her '
-      'arrows find a target before she has finished aiming.',
+      'A half-divine child of unknown origin, who never fails to appear '
+      'wherever the light needs defending.',
   'Thundric':
-      'The last archer of a storm-touched bloodline. His arrows carry lightning '
-      'and never miss the one they were meant for.',
+      'A guiding light to his younger brother, Thunderboy. He has sworn his '
+      'whole existence to one purpose: keeping him safe, whatever the cost.',
   'Talonfire':
-      'A tribal hunter marked in war paint, hunting with a hawk at his shoulder. '
-      'He tracks by fire and sunset, and he does not lose a trail.',
+      'Once a warrior of Tocho\'s tribe, sworn to hunt those who wound the '
+      'land. But the fire within him burned too hot to control, and it led him '
+      'to the Dark One. Now his arrows serve the very darkness he once hunted.',
   'Nova':
-      'A sniper who works from rooftops and ruined towers, her scarf snapping in '
-      'the wind. She lives by one motto: higher, faster, further.',
+      'A gifted soldier whose marksmanship borders on the unnatural. Entire '
+      'nations fear the day she takes aim at them.',
   'Riptide':
-      'A night-ops soldier who moves like the current, unseen until the moment '
-      'he is on you. Silence is the only weapon he never needs to reload.',
+      'Once a special ops commando who fought for the light, he lost his way '
+      'and now sells his gun to the highest bidder. His soul belongs to the '
+      'Dark One.',
 
   // Rogues
   'Thunderboy':
-      'A street-fast kid who runs on borrowed lightning. He is gone before the '
-      'thunder arrives, and so is whatever he came for.',
+      'Son of Kaelvorn the Sovereign, he carries divine blood in his veins. '
+      'He is still only a boy, and he has no idea that he is the key to '
+      'everything.',
   'Vaelric':
-      'A hooded mercenary with a crossbow and red eyes that never blink. He '
-      'sells his skill by the coin and honors the contract, nothing more.',
+      'In all the Yamikawa clan, only Nyx surpassed him. That single fact '
+      'poisoned him. Jealousy drove him into isolation, and in the end, out '
+      'of the clan entirely.',
   'Nyx':
-      'An assassin wreathed in rainwater, with twin blades forged from a '
-      'storm. She strikes from the downpour and is gone with it.',
+      'Even among the deadly Yamikawa assassin clan, he stands apart. The '
+      'water in his blood makes him a blade no one sees coming, and Vaelric '
+      'has never forgiven him for it.',
   'Mourn':
-      'A wraith of black smoke that haunts a ruined cathedral. No one has seen '
-      'its face, only the red eyes and the claws.',
+      'Little is known of this entity. Some say it is the darkness in the '
+      'hearts of men given form; others say it is chaos itself. Whatever the '
+      'truth, one thing is certain: it serves the Dark One.',
   'Doku':
-      'A shadow of the moonlit rooftops, one katana drawn and a castle below. '
-      'The contract is signed in silence and settled before dawn.',
+      'Born in squalor and destined for a life in chains, misery drove him to '
+      'radical beliefs. To provide for those he loved, he became a master '
+      'thief and a shadow assassin. Brushes with death awakened powers buried '
+      'deep within him, and in time, he made them his own.',
 
   // Mages
   'Elder Shen':
-      'A Taoist master who has meditated on the wind for a hundred years. His '
-      'spells are quiet, and the gales they call are not.',
+      'The heir to thousands of years of heritage, Elder Shen descends from '
+      'the mightiest bloodline that never bent to the Dark One. Gao Feng '
+      'stands at his side as his right hand.',
   'Vorkath':
-      'A demonic sorcerer who reigns from a temple courtyard of black stone. '
-      'He wields fire the way other men wield an argument.',
+      'The one they call the Dark One: an ancient spirit who dares to '
+      'challenge the old gods themselves. He means to tear down the world as '
+      'we know it and raise a new one in his own image.',
   'Tocho':
-      'A river shaman who speaks with the waterfall and the spirits beneath '
-      'it. When he calls, the water answers in a vortex.',
+      'A shaman of an ancient tribe that walks the path of enlightenment and '
+      'listens to the land. The waters answer his call, and he uses them to '
+      'save lives and mend the wounds mankind leaves behind.',
   'Elowen':
-      'An ancient forest wizard in a leaf-brimmed hat, with a wolf, a deer and '
-      'a bird at her side. The woods speak, and she alone listens.',
+      'One of the few mortals ever to cheat death. His command of the earth '
+      'is so complete, and his legend so full of wonders, that many believe '
+      'he is a god.',
   'Friedrich Blitzberg':
-      'A Victorian schemer who studies power and influence. His cane is charged '
-      'with lightning, and his study overlooks a storm of his own making.',
+      'Like Elowen, he found the secret to immortality, but he chose a darker '
+      'path. Centuries of hoarded knowledge have made him rich and powerful, '
+      'and all of it now serves the Dark One and his promised utopia.',
 
   // Healers
   'Omnes':
-      'An angelic keeper of a golden chapel whose light mends wounds and '
-      'silences fear. Those she heals rarely remember the fight.',
+      'One of the four Covenants. His divine innocence lets him heal any '
+      'wound, and in the rarest of moments, even undo death itself.',
   'The Cosmic Eye':
-      'A watcher from a cathedral among the stars. It sees every wound before '
-      'it lands, and mends what it foresaw.',
+      'One of the four Covenants, and the greatest mystery among them. Almost '
+      'nothing is known of him, save this: he stands above even the divine.',
   'Cardinal Ashworth':
-      'A cardinal in crimson vestments who leads a procession of embers. His '
-      'blessings warm, and his sermons burn.',
+      'Next in line to lead the faith, he carries a fire that could burn '
+      'kingdoms to ash. Yet he is a man of peace, and that flame is spent only '
+      'on healing those in need.',
   'Thalassar':
-      'A priest of the sunken temple, robed in pearl beneath a trident-bearing '
-      'statue. Tides answer his prayers and wounds close like ebbing water.',
+      'A gentle soul who hears the ocean and the spirits that dwell within '
+      'it. His command of the tides is among the greatest the world has ever '
+      'known.',
   'The Hollow Shepherd':
-      'A corrupted forest spirit with antlers, skulls at its belt and eyes like '
-      'embers in the mist. It heals, but the cost is seldom named.',
+      'When Elowen found the light, he cast out the darkness within him. But '
+      'that darkness did not die. It lingered, festered, and took a form of '
+      'its own: the Hollow Shepherd.',
 };
 
 String? loreFor(String championName) => championLore[championName];

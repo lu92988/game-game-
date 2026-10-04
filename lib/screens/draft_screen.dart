@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 
 import '../data/champion_art.dart';
 import '../data/champion_lore.dart';
+import '../data/champion_scene_art.dart';
 import '../logic/music_controller.dart';
 import '../data/roster.dart';
 import '../models/champion_def.dart';
 import '../models/champion_role.dart';
+import '../models/game_element.dart';
 import '../theme/battle_colors.dart';
 import '../theme/body_style.dart';
 import '../widgets/arena_background.dart';
@@ -350,6 +352,7 @@ class _StatCard extends StatelessWidget {
     final el = def.element;
     final role = def.role;
     final lore = loreFor(def.name);
+    final scene = sceneArtFor(def.name);
     final roleName = role.name[0].toUpperCase() + role.name.substring(1);
     final elName = el.name[0].toUpperCase() + el.name.substring(1);
 
@@ -377,8 +380,8 @@ class _StatCard extends StatelessWidget {
     );
 
     return Container(
-      width: 250,
-      padding: const EdgeInsets.all(14),
+      width: scene != null ? 300 : 250,
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: BattleColors.bgMid,
         borderRadius: BorderRadius.circular(8),
@@ -387,49 +390,74 @@ class _StatCard extends StatelessWidget {
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            def.name,
-            style: const TextStyle(
-              fontSize: 16,
-              color: BattleColors.gold,
-              fontWeight: FontWeight.w600,
+          if (scene != null)
+            AspectRatio(
+              aspectRatio: 16 / 9,
+              child: Image.asset(scene, fit: BoxFit.cover),
             ),
+          Padding(
+            padding: const EdgeInsets.all(14),
+            child: _details(el, role, roleName, elName, lore, stat),
           ),
-          const SizedBox(height: 4),
-          Row(
-            children: [
-              Icon(el.icon, size: 14, color: el.color),
-              const SizedBox(width: 6),
-              Text('$elName $roleName', style: bodyStyle(fontSize: 12)),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              stat(role.attackLabel, role.attackStat),
-              stat('DEF', role.def),
-              stat('SPD', role.spd),
-              stat('HP', role.hp),
-            ],
-          ),
-          if (lore != null) ...[
-            const SizedBox(height: 10),
-            Container(height: 1, color: BattleColors.panelBorder),
-            const SizedBox(height: 10),
-            Text(
-              lore,
-              style: bodyStyle(
-                fontSize: 13,
-                height: 1.4,
-                fontWeight: FontWeight.w600,
-                fontStyle: FontStyle.italic,
-              ),
-            ),
-          ],
         ],
       ),
+    );
+  }
+
+  Widget _details(
+    GameElement el,
+    ChampionRole role,
+    String roleName,
+    String elName,
+    String? lore,
+    Widget Function(String, int) stat,
+  ) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          def.name,
+          style: const TextStyle(
+            fontSize: 16,
+            color: BattleColors.gold,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Row(
+          children: [
+            Icon(el.icon, size: 14, color: el.color),
+            const SizedBox(width: 6),
+            Text('$elName $roleName', style: bodyStyle(fontSize: 12)),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            stat(role.attackLabel, role.attackStat),
+            stat('DEF', role.def),
+            stat('SPD', role.spd),
+            stat('HP', role.hp),
+          ],
+        ),
+        if (lore != null) ...[
+          const SizedBox(height: 10),
+          Container(height: 1, color: BattleColors.panelBorder),
+          const SizedBox(height: 10),
+          Text(
+            lore,
+            style: bodyStyle(
+              fontSize: 13,
+              height: 1.4,
+              fontWeight: FontWeight.w600,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ],
+      ],
     );
   }
 }
