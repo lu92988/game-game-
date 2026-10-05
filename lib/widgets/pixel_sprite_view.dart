@@ -4,6 +4,8 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 
 import '../data/battle_sprites.dart';
+import '../data/champion_art.dart';
+import '../theme/battle_colors.dart';
 
 /// Draws a champion's battle sprite into a [boxSize] square: their artwork
 /// from [battleSpriteImages] when it exists, otherwise their hand-drawn
@@ -86,7 +88,9 @@ class BattleSpriteView extends StatelessWidget {
         ),
       );
     } else {
-      return SizedBox.square(dimension: boxSize);
+      final portrait = artFor(championName);
+      if (portrait == null) return SizedBox.square(dimension: boxSize);
+      painted = _portraitStandIn(portrait);
     }
 
     if (knockedOut) {
@@ -99,6 +103,48 @@ class BattleSpriteView extends StatelessWidget {
       );
     }
     return SizedBox.square(dimension: boxSize, child: painted);
+  }
+
+  /// Until a champion has a battle sprite, their card portrait stands in,
+  /// in a small gold frame standing on the ground line.
+  Widget _portraitStandIn(String portrait) {
+    Widget framed = Container(
+      width: boxSize * 0.62,
+      height: boxSize * 0.82,
+      decoration: BoxDecoration(
+        border: Border.all(color: BattleColors.gold, width: 1.5),
+        borderRadius: BorderRadius.circular(4),
+        boxShadow: const [BoxShadow(color: Colors.black54, blurRadius: 6)],
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Image.asset(
+        portrait,
+        fit: BoxFit.cover,
+        alignment: Alignment.topCenter,
+      ),
+    );
+    if (flash > 0) {
+      framed = ColorFiltered(
+        colorFilter: ColorFilter.mode(
+          flashColor.withValues(alpha: (flash * 0.7).clamp(0, 1)),
+          BlendMode.srcATop,
+        ),
+        child: framed,
+      );
+    }
+    if (knockedOut) {
+      framed = ColorFiltered(
+        colorFilter: ColorFilter.mode(
+          _koShade.withValues(alpha: 0.6),
+          BlendMode.srcATop,
+        ),
+        child: framed,
+      );
+    }
+    return SizedBox.square(
+      dimension: boxSize,
+      child: Align(alignment: Alignment.bottomCenter, child: framed),
+    );
   }
 
   /// Shows one frame of an animated sheet: the whole sheet is scaled so a

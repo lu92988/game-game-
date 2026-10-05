@@ -1,0 +1,196 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128"
+     viewBox="0 0 128 128" shape-rendering="crispEdges">
+  <defs>
+    <!-- Side-facing head, backpack and hoodie -->
+    <g id="core">
+      <path fill="#171b24" d="M9 11h5v8h-3v-2H9z"/>
+      <path fill="#343b47" d="M11 11h3v8h-2v-2h-1z"/>
+      <path fill="#171b24" d="M13 11h2v8h-2z M18 11h2v8h-2z"/>
+      <path fill="#f1f0e9" d="M12 12h9v7h-2v2h-6v-2h-1z"/>
+      <path fill="#c7ced1" d="M13 13h2v5h-1v2h-1z"/>
+      <path fill="#303846" d="M14 20h5v2h-5z"/>
+
+      <!-- Face -->
+      <path fill="#bd754e" d="M17 6h6v1h2v4h-2v2h-6v-2h-2V8h2z"/>
+      <path fill="#edbd91" d="M18 7h5v1h1v3h-2v1h-4v-2h-1V8h1z"/>
+      <path fill="#29242a" d="M22 9h2v1h-2z M24 10h1v1h-1z"/>
+
+      <!-- Tousled blond hair -->
+      <path fill="#704821" d="M15 7V5h2V3h3V2h3v2h3v2h-1v3h-2V7h-2V6h-3v2h-2v2h-2V7z"/>
+      <path fill="#e8b84f" d="M16 6V4h2V3h3v2h3v2h-2V6h-3v2h-2v1h-2V6z"/>
+      <path fill="#ffd978" d="M18 4h2V3h2v2h-2v1h-2z M23 5h2v2h-2z"/>
+    </g>
+
+    <!-- Standing legs -->
+    <g id="standLegs">
+      <path fill="#151923" d="M11 19h5v5h-1v4h-2v2H8v-2h2v-2h1v-3h1z"/>
+      <path fill="#303846" d="M12 22h3v4h-1v3h-2v-3h-1z"/>
+      <path fill="#f3f2ed" d="M9 28h4v1h2v2H7v-1h2z"/>
+      <path fill="#151923" d="M17 19h5v5h1v4h2v2h-7v-2h1v-4h-1z"/>
+      <path fill="#303846" d="M18 22h3v4h1v3h-2v-3h-1z"/>
+      <path fill="#f3f2ed" d="M18 28h4v1h2v2h-7v-1h1z"/>
+    </g>
+
+    <!-- Standing arms -->
+    <g id="arms">
+      <path fill="#343b47" d="M10 11h4v3l-2 3H9v-2H8v-2h2z"/>
+      <path fill="#f1f0e9" d="M10 12h3v2l-2 3H9v-2H8v-1h2z"/>
+      <path fill="#e8b77e" d="M8 16h2v2H8z"/>
+      <path fill="#343b47" d="M20 11h3v2h2v4h-2v3h-2v-4h-2z"/>
+      <path fill="#f1f0e9" d="M20 12h2v2h2v3h-1v2h-1v-4h-2z"/>
+      <path fill="#e8b77e" d="M22 18h2v3h-1v1h-2v-2h1z"/>
+    </g>
+
+    <!-- Launch poses: legs are bent, spread, and trailing rather than crossing -->
+    <g id="crouchLegs">
+      <path fill="#151923" d="M11 18h5v4l-2 2-3 3H7v-2h3l2-3 1-2z"/>
+      <path fill="#303846" d="M12 20h3v3l-2 2h-2l2-2z"/>
+      <path fill="#f3f2ed" d="M8 26h4v1h2v2H6v-1h2z"/>
+      <path fill="#151923" d="M17 18h5v4l3 3-1 3h-5v-2h3l-2-3-3-2z"/>
+      <path fill="#303846" d="M18 20h3l2 3-1 3h-2v-3l-2-1z"/>
+      <path fill="#f3f2ed" d="M19 27h4v1h2v2h-7v-1h1z"/>
+    </g>
+
+    <g id="pushLegs">
+      <!-- Rear leg pushes off behind him -->
+      <path fill="#151923" d="M12 17h5v4h-3l-3 3-4 1-3-2 2-2 3 1 3-3z"/>
+      <path fill="#303846" d="M11 21h4l-3 3-4 1-1-1 3-1z"/>
+      <path fill="#f3f2ed" d="M5 22h3v2l3 1-1 2-5-2-2-2z"/>
+      <!-- Front leg tucked forward -->
+      <path fill="#151923" d="M17 17h5v4l2 2-2 3h-4l1-3-3-2z"/>
+      <path fill="#303846" d="M18 19h3v3l2 2h-3l-2-2z"/>
+      <path fill="#f3f2ed" d="M19 24h4v2h-5z"/>
+    </g>
+
+    <g id="flightLegs">
+      <!-- Long trailing leg -->
+      <path fill="#151923" d="M12 16h5v4h-4l-3 3-4 1-3-2 2-2 3 1 3-3z"/>
+      <path fill="#303846" d="M10 20h5l-3 3-4 1-1-1 3-1z"/>
+      <path fill="#f3f2ed" d="M4 21h4v2l3 1-1 2-5-2-2-2z"/>
+      <!-- Other knee pulled forward -->
+      <path fill="#151923" d="M17 16h5v4l3 2-2 3h-4l1-3-3-2z"/>
+      <path fill="#303846" d="M18 18h3v3l2 2h-3l-2-2z"/>
+      <path fill="#f3f2ed" d="M19 23h4v2h-5z"/>
+    </g>
+
+    <!-- Arm held back while running -->
+    <g id="backArm">
+      <path fill="#343b47" d="M10 11h4v3l-3 2H7v-2h2z"/>
+      <path fill="#f1f0e9" d="M10 12h3v2l-3 2H8v-1h2z"/>
+      <path fill="#e8b77e" d="M7 14h2v2H7z"/>
+    </g>
+
+    <!-- Shooting arm extended forward -->
+    <g id="shootArm">
+      <path fill="#343b47" d="M19 11h4v2h3v2h4v2h-5v-1h-4v-2h-2z"/>
+      <path fill="#f1f0e9" d="M20 12h3v2h3v2h3v1h-4v-1h-4v-2h-2z"/>
+      <path fill="#e8b77e" d="M27 15h3v2h-2v1h-2v-2h1z"/>
+    </g>
+
+    <g id="runner">
+      <use href="#standLegs"/>
+      <use href="#arms"/>
+      <use href="#core"/>
+    </g>
+  </defs>
+
+  <!-- IDLE row -->
+  <g transform="translate(0 0)"><use href="#runner"/></g>
+  <g transform="translate(32 0)">
+    <g transform="translate(0 -1)"><use href="#runner"/></g>
+    <path fill="#ffd84f" d="M6 8h1v2H6z M27 9h1v2h-1z"/>
+  </g>
+  <g transform="translate(64 0)"><use href="#runner"/></g>
+  <g transform="translate(96 0)">
+    <g transform="translate(0 1)"><use href="#runner"/></g>
+    <path fill="#fff3a1" d="M5 10h1v2H5z M27 7h1v2h-1z"/>
+  </g>
+
+  <!-- ATTACK row: crouch, push off, launch, shoot -->
+  <g transform="translate(0 32)">
+    <use href="#crouchLegs"/>
+    <use href="#backArm"/>
+    <use href="#core" transform="translate(-1 1)"/>
+    <path fill="#ffd84f" d="M25 12h1v2h-1z"/>
+  </g>
+
+  <g transform="translate(32 32)">
+    <g transform="translate(1 0)">
+      <use href="#pushLegs"/>
+      <use href="#backArm"/>
+      <use href="#core" transform="rotate(8 16 20)"/>
+      <use href="#shootArm"/>
+    </g>
+    <path fill="#ffd84f" d="M2 13h3v1H2z M4 16h3v1H4z"/>
+  </g>
+
+  <g transform="translate(64 32)">
+    <g transform="translate(2 0)">
+      <use href="#flightLegs"/>
+      <use href="#backArm" transform="rotate(-15 11 12)"/>
+      <use href="#core" transform="rotate(12 16 20)"/>
+      <use href="#shootArm"/>
+    </g>
+    <path fill="#ffd84f" d="M25 13h2v2h-2z M27 15h2v2h-2z"/>
+  </g>
+
+  <g transform="translate(96 32)">
+    <g transform="translate(2 0)">
+      <use href="#flightLegs"/>
+      <use href="#backArm" transform="rotate(-15 11 12)"/>
+      <use href="#core" transform="rotate(10 16 20)"/>
+      <use href="#shootArm"/>
+    </g>
+    <!-- Bolt launches from the outstretched hand -->
+    <path fill="#ffd84f" d="M28 8h3v3h-2v2h2l-4 6 1-4h-2l2-3h-2z"/>
+    <path fill="#fff8cc" d="M29 9h1v2h-1z M28 14h1v2h-1z"/>
+  </g>
+
+  <!-- DAMAGE row -->
+  <g transform="translate(0 64)"><use href="#runner"/></g>
+  <g transform="translate(32 64)">
+    <g transform="translate(-1 0)"><use href="#runner"/></g>
+    <path fill="#ff6677" d="M18 6h5v2h-2v3h-3V9h-2z"/>
+    <path fill="#fff3a1" d="M26 8h2v1h-2z"/>
+  </g>
+  <g transform="translate(64 64)">
+    <g transform="translate(-1 0)"><use href="#runner"/></g>
+    <path fill="#ffd84f" d="M26 13h2v1h-2z M27 17h2v1h-2z"/>
+  </g>
+  <g transform="translate(96 64)"><use href="#runner"/></g>
+
+  <!-- DEATH row: crouch, buckle, fall, lie still -->
+  <g transform="translate(0 96)">
+    <use href="#crouchLegs"/>
+    <use href="#backArm"/>
+    <use href="#core" transform="translate(0 1)"/>
+  </g>
+  <g transform="translate(32 96)">
+    <g transform="rotate(14 16 23)">
+      <use href="#crouchLegs"/>
+      <use href="#backArm"/>
+      <use href="#core" transform="translate(0 2)"/>
+    </g>
+  </g>
+  <g transform="translate(64 96)">
+    <g transform="rotate(35 16 24)">
+      <use href="#flightLegs"/>
+      <use href="#backArm"/>
+      <use href="#core" transform="translate(0 2)"/>
+    </g>
+    <path fill="#ffd84f" d="M5 19h1v2H5z M27 15h1v2h-1z"/>
+  </g>
+  <g transform="translate(96 96)">
+    <!-- Fallen sideways -->
+    <path fill="#151923" d="M4 23h8v-2h5v2h4v3h-3v2H9v-1H6v-2H4z"/>
+    <path fill="#303846" d="M7 23h7v2H7z M14 22h4v2h-4z"/>
+    <path fill="#f3f2ed" d="M5 27h5v1h2v2H4v-1h1z"/>
+    <path fill="#343b47" d="M14 20h7v2h3v4h-3v2h-5v-2h-3v-4h1z"/>
+    <path fill="#f1f0e9" d="M15 21h6v3h2v2h-7v-2h-2v-2h1z"/>
+    <path fill="#e8b77e" d="M20 26h7v1h2v2h-2v1h-2v-2h-5z"/>
+    <path fill="#bd754e" d="M24 20h4v1h1v3h-2v2h-4v-2h-1v-3h2z"/>
+    <path fill="#edbd91" d="M25 21h3v2h-1v2h-3v-2h-1v-1h2z"/>
+    <path fill="#704821" d="M23 21v-2h2v-1h3v2h2v2h-2v-1h-3v2h-2z"/>
+    <path fill="#e8b84f" d="M24 20v-1h3v1h2v1h-3v1h-2z"/>
+  </g>
+</svg>

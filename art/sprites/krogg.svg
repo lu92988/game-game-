@@ -1,0 +1,178 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128"
+     viewBox="0 0 128 128" shape-rendering="crispEdges">
+  <defs>
+    <!-- Toad face, pale belly and blue armor -->
+    <g id="core">
+      <!-- Broad toad head -->
+      <path fill="#142b3b" d="M8 8h3V6h4V5h7v1h4v2h3v5h-2v2H10v-2H8z"/>
+      <path fill="#4b91a5" d="M10 8h4V7h9v1h3v4h-2v2H11v-2h-2v-3h1z"/>
+      <!-- Eyes -->
+      <path fill="#142b3b" d="M10 6h4V4h4v4h-2v2h-5V8h-1z M20 6h4V4h4v4h-2v2h-5V8h-1z"/>
+      <path fill="#8ac6ca" d="M11 5h5v3h-2v2h-3V8h-1z M21 5h5v3h-2v2h-3V8h-1z"/>
+      <path fill="#d8b75c" d="M12 6h2v2h-2z M22 6h2v2h-2z"/>
+      <path fill="#101820" d="M13 6h1v2h-1z M23 6h1v2h-1z"/>
+      <path fill="#172936" d="M12 12h13v2h-2v2H14v-2h-2z"/>
+      <path fill="#b8d6d0" d="M14 13h9v1h-9z"/>
+
+      <!-- Crown -->
+      <path fill="#263b4b" d="M15 4V2h2v2h2V1h2v4h-2v1h-4V5h-2V3h2z"/>
+      <path fill="#85d9e4" d="M16 3h1v2h-1z M20 2h1v2h-1z"/>
+
+      <!-- Torso and belly -->
+      <path fill="#142b3b" d="M10 14h4v-1h9v1h4v7h-2v4H12v-4h-2z"/>
+      <path fill="#416d82" d="M11 15h3v-1h9v1h3v5h-2v3H13v-3h-2z"/>
+      <path fill="#b8d6d0" d="M14 16h7v1h2v4h-2v2h-7v-2h-2v-4h2z"/>
+      <path fill="#8ac6ca" d="M15 17h6v1h-6z M14 20h1v2h-1z M21 20h1v2h-1z"/>
+      <!-- Belt -->
+      <path fill="#203849" d="M11 22h15v2H11z"/>
+      <path fill="#d1b56b" d="M17 22h3v2h-3z"/>
+    </g>
+
+    <!-- Squat legs and webbed feet -->
+    <g id="legs">
+      <path fill="#142b3b" d="M12 23h5v4h-2v3h-4v-2h2v-3h-1z"/>
+      <path fill="#416d82" d="M13 25h3v3h-2v2h-2v-2h1z"/>
+      <path fill="#142b3b" d="M19 23h5v3h-1v3h2v2h-5v-2h1v-3h-2z"/>
+      <path fill="#416d82" d="M19 25h3v3h1v2h-2v-2h-2z"/>
+      <path fill="#85d9e4" d="M9 29h5v1h2v2H7v-1h2z M20 29h4v1h2v2h-7v-1h1z"/>
+    </g>
+
+    <!-- Arms -->
+    <g id="arms">
+      <path fill="#142b3b" d="M9 14h4v3h-2v3H9v-2H7v-2h2z"/>
+      <path fill="#4b91a5" d="M10 15h2v2h-1v3H9v-2H8v-1h2z"/>
+      <path fill="#85d9e4" d="M8 18h2v2H8z"/>
+      <path fill="#142b3b" d="M23 14h3v2h2v4h-2v2h-2v-4h-2z"/>
+      <path fill="#4b91a5" d="M23 15h2v2h2v3h-1v1h-1v-3h-2z"/>
+      <path fill="#85d9e4" d="M24 20h2v2h-2z"/>
+    </g>
+
+    <!-- Shield carried at the side -->
+    <g id="shield">
+      <path fill="#142b3b" d="M2 16h5v1h2v7H7v2H5v-1H3v-2H2z"/>
+      <path fill="#315d73" d="M3 17h4v1h1v5H6v2H5v-1H4v-2H3z"/>
+      <path fill="#85d9e4" d="M4 18h1v4h1v1H5v-1H4z"/>
+      <path fill="#d0b975" d="M5 18h1v2h1v1H6v2H5v-2H4v-1h1z"/>
+    </g>
+
+    <!-- Resting trident -->
+    <g id="tridentRest">
+      <path fill="#172633" d="M25 9h2v17h-2z"/>
+      <path fill="#597387" d="M25 12h1v12h-1z"/>
+      <path fill="#d0b975" d="M23 7h1v4h-1z M25 5h2v6h-2z M28 7h1v4h-1z"/>
+      <path fill="#85d9e4" d="M26 6h1v3h-1z"/>
+      <path fill="#172633" d="M23 10h6v2h-6z"/>
+    </g>
+
+    <!-- Forward-thrust trident -->
+    <g id="tridentThrust">
+      <path fill="#172633" d="M15 15h14v2H15z"/>
+      <path fill="#597387" d="M18 15h9v1h-9z"/>
+      <path fill="#d0b975" d="M27 12h1v3h-1z M29 11h2v6h-2z M27 17h1v3h-1z"/>
+      <path fill="#85d9e4" d="M29 12h1v3h-1z"/>
+    </g>
+
+    <g id="toad">
+      <use href="#legs"/>
+      <use href="#shield"/>
+      <use href="#core"/>
+      <use href="#arms"/>
+      <use href="#tridentRest"/>
+    </g>
+  </defs>
+
+  <!-- IDLE -->
+  <g transform="translate(0 0)"><use href="#toad"/></g>
+  <g transform="translate(32 0)">
+    <g transform="translate(0 -1)"><use href="#toad"/></g>
+    <path fill="#85d9e4" d="M29 10h1v2h-1z"/>
+  </g>
+  <g transform="translate(64 0)"><use href="#toad"/></g>
+  <g transform="translate(96 0)">
+    <g transform="translate(0 1)"><use href="#toad"/></g>
+    <path fill="#85d9e4" d="M28 12h1v2h-1z"/>
+  </g>
+
+  <!-- ATTACK: backswing, sweeping trident strike, watery follow-through -->
+  <g transform="translate(0 32)">
+    <use href="#legs"/>
+    <use href="#shield"/>
+    <use href="#core"/>
+    <use href="#arms"/>
+    <g transform="rotate(-30 23 20)">
+      <use href="#tridentRest"/>
+    </g>
+  </g>
+
+  <g transform="translate(32 32)">
+    <use href="#legs"/>
+    <use href="#shield"/>
+    <use href="#core"/>
+    <use href="#arms"/>
+    <g transform="rotate(-15 23 20)">
+      <use href="#tridentRest"/>
+    </g>
+    <path fill="#85d9e4" d="M17 7h2v2h-2z M20 9h2v2h-2z"/>
+  </g>
+
+  <g transform="translate(64 32)">
+    <use href="#legs"/>
+    <use href="#shield"/>
+    <use href="#core"/>
+    <use href="#arms"/>
+    <g transform="rotate(10 23 20)">
+      <use href="#tridentRest"/>
+    </g>
+    <!-- Water trail following the swing -->
+    <path fill="#3aa8d4" d="M14 7h3v2h3v2h3v2h3v2h4v2h-3v2h-3v-2h-3v-2h-3v-2h-2v-2h-2z"/>
+    <path fill="#d7fbff" d="M17 9h2v2h3v2h3v2h3v1h-3v-1h-3v-2h-3v-2h-2z"/>
+  </g>
+
+  <g transform="translate(96 32)">
+    <use href="#legs"/>
+    <use href="#shield"/>
+    <use href="#core"/>
+    <use href="#arms"/>
+    <g transform="rotate(25 23 20)">
+      <use href="#tridentRest"/>
+    </g>
+    <!-- Splash at the end of the swing -->
+    <path fill="#3aa8d4" d="M23 8h2v3h2v2h3v3h-2v2h-3v-2h-2v-3h-2v-3h2z"/>
+    <path fill="#d7fbff" d="M25 10h1v3h2v2h-2v-2h-2v-2h1z"/>
+    <path fill="#85d9e4" d="M29 7h1v2h-1z M20 12h1v2h-1z M30 18h1v2h-1z"/>
+  </g>
+
+  <!-- DAMAGE -->
+  <g transform="translate(0 64)"><use href="#toad"/></g>
+  <g transform="translate(32 64)">
+    <g transform="translate(-1 0)"><use href="#toad"/></g>
+    <path fill="#bd6672" d="M13 6h5v2h-2v3h-3V9h-2z"/>
+  </g>
+  <g transform="translate(64 64)">
+    <g transform="translate(-1 0)"><use href="#toad"/></g>
+    <path fill="#85d9e4" d="M27 12h2v1h-2z M28 16h2v1h-2z"/>
+  </g>
+  <g transform="translate(96 64)"><use href="#toad"/></g>
+
+  <!-- DEATH -->
+  <g transform="translate(0 96)"><use href="#toad"/></g>
+  <g transform="translate(32 96)">
+    <g transform="translate(0 3) scale(1 .88)"><use href="#toad"/></g>
+  </g>
+  <g transform="translate(64 96)">
+    <g transform="rotate(20 16 24)"><use href="#toad"/></g>
+  </g>
+  <g transform="translate(96 96)">
+    <!-- Fallen toad, shield and trident -->
+    <path fill="#142b3b" d="M5 23h7v-2h7v2h4v4h-3v2H9v-1H6v-2H4z"/>
+    <path fill="#416d82" d="M8 23h7v2H8z M14 22h5v2h-5z"/>
+    <path fill="#b8d6d0" d="M12 23h5v2h-5z"/>
+    <path fill="#85d9e4" d="M6 27h6v1h2v2H4v-1h2z"/>
+    <path fill="#4b91a5" d="M19 22h5v4h-2v2h-4v-2h2z"/>
+    <path fill="#142b3b" d="M23 21h5v1h2v3h-2v2h-5v-2h-1v-3h1z"/>
+    <path fill="#8ac6ca" d="M24 22h4v2h-2v2h-2z"/>
+    <path fill="#172633" d="M4 19h2v10H4z"/>
+    <path fill="#d0b975" d="M3 18h1v3H3z M5 17h2v5H5z M7 18h1v3H7z"/>
+    <path fill="#315d73" d="M27 24h3v1h-3z"/>
+  </g>
+</svg>

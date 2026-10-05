@@ -53,6 +53,11 @@ const Map<String, SpriteSheet> battleSpriteSheets = {
     'assets/sprites/demon_knight.png',
     facesLeft: true,
   ),
+  'Thunderboy': SpriteSheet('assets/sprites/thunderboy.png'),
+  'Robotoman': SpriteSheet('assets/sprites/robotoman.png'),
+  'Riptide': SpriteSheet('assets/sprites/riptide.png'),
+  'Krogg': SpriteSheet('assets/sprites/krogg.png'),
+  'Friedrich Blitzberg': SpriteSheet('assets/sprites/friedrich_blitzberg.png'),
 };
 
 SpriteSheet? spriteSheetFor(String championName) =>

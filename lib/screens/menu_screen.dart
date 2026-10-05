@@ -144,7 +144,7 @@ class _MenuScreenState extends State<MenuScreen> {
                           MusicController.instance.ensureStarted();
                           Navigator.of(context).push(
                             MaterialPageRoute(
-                              builder: (_) => const ClassicBattleScreen(),
+                              builder: (_) => ClassicBattleScreen.testBattle(),
                             ),
                           );
                         },

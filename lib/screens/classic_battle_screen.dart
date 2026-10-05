@@ -28,12 +28,24 @@ import '../widgets/speed_clash_overlay.dart';
 class ClassicBattleScreen extends StatefulWidget {
   const ClassicBattleScreen({
     super.key,
-    this.playerNames = const ['Robotoman', 'Thunderboy', 'Krogg'],
-    this.enemyNames = const ['Demon Knight', 'Friedrich Blitzberg', 'Riptide'],
+    required this.playerPicks,
+    this.enemyPicks,
   });
 
-  final List<String> playerNames;
-  final List<String> enemyNames;
+  /// The fixed teams of the "Classic Battle (test)" menu entry.
+  factory ClassicBattleScreen.testBattle() => ClassicBattleScreen(
+    playerPicks: _defs(const ['Robotoman', 'Thunderboy', 'Krogg']),
+    enemyPicks: _defs(const ['Demon Knight', 'Friedrich Blitzberg', 'Riptide']),
+  );
+
+  static List<ChampionDef> _defs(List<String> names) => [
+    for (final n in names) roster.firstWhere((d) => d.name == n),
+  ];
+
+  final List<ChampionDef> playerPicks;
+
+  /// A fixed enemy team; when null the enemy is drafted at random.
+  final List<ChampionDef>? enemyPicks;
 
   @override
   State<ClassicBattleScreen> createState() => _ClassicBattleScreenState();
@@ -74,15 +86,12 @@ class _ClassicBattleScreenState extends State<ClassicBattleScreen>
   final List<_Popup> _popups = [];
   int _popupSerial = 0;
 
-  static ChampionDef _def(String name) =>
-      roster.firstWhere((d) => d.name == name);
-
   @override
   void initState() {
     super.initState();
     _controller = BattleController(
-      playerPicks: widget.playerNames.map(_def).toList(),
-      enemyPicks: widget.enemyNames.map(_def).toList(),
+      playerPicks: widget.playerPicks,
+      enemyPicks: widget.enemyPicks,
     )..addListener(_onChanged);
     _snapshotHp();
   }
