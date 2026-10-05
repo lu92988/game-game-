@@ -20,7 +20,9 @@ import 'battle_engine.dart';
 /// just happened before the next hit lands.
 const enemyActDelay = Duration(milliseconds: 1800);
 
-const maxLogLines = 40;
+/// Enough to keep a whole battle, so the battle history can be read back
+/// from the first turn.
+const maxLogLines = 300;
 
 /// Owns the full battle state and the turn-pacing "effect loop": figures out
 /// who's up next, starts a new round when everyone's acted, and auto-plays
@@ -28,13 +30,20 @@ const maxLogLines = 40;
 /// calling [_afterUpdate], which is the single source of truth for pacing —
 /// mirroring the two `useEffect`s in the original React prototype.
 class BattleController extends ChangeNotifier {
-  BattleController({required this._playerPicks, Random? random})
-    : _random = random ?? Random() {
+  BattleController({
+    required this._playerPicks,
+    this._enemyPicks,
+    Random? random,
+  }) : _random = random ?? Random() {
     _startBattle('The battle begins.');
     _afterUpdate();
   }
 
   final List<ChampionDef> _playerPicks;
+
+  /// A fixed enemy team, for set-piece battles. When null the enemy is
+  /// drafted at random from whoever the player didn't pick.
+  final List<ChampionDef>? _enemyPicks;
   final Random _random;
   final AudioPlayer _sfxPlayer = AudioPlayer();
   final AudioPlayer _voicePlayer = AudioPlayer();
@@ -92,7 +101,8 @@ class BattleController extends ChangeNotifier {
       for (var i = 0; i < _playerPicks.length; i++)
         Champion.fromDef(_playerPicks[i], Side.player, i),
     ];
-    final enemyDefs = pickThree(p.map((c) => c.name).toList(), _random);
+    final enemyDefs =
+        _enemyPicks ?? pickThree(p.map((c) => c.name).toList(), _random);
     final e = <Champion>[
       for (var i = 0; i < enemyDefs.length; i++)
         Champion.fromDef(enemyDefs[i], Side.enemy, i),

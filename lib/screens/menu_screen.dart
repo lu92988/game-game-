@@ -5,6 +5,7 @@ import '../logic/music_controller.dart';
 import '../theme/battle_colors.dart';
 import '../widgets/arena_background.dart';
 import '../widgets/ornate_divider.dart';
+import 'classic_battle_screen.dart';
 import 'draft_screen.dart';
 import 'how_to_play_screen.dart';
 
@@ -136,6 +137,25 @@ class _MenuScreenState extends State<MenuScreen> {
                         child: const Text('How to Play'),
                       ),
                       const SizedBox(height: 10),
+                      // Temporary entry point for trying the SNES-style
+                      // battle look before deciding whether to switch to it.
+                      TextButton(
+                        onPressed: () {
+                          MusicController.instance.ensureStarted();
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => const ClassicBattleScreen(),
+                            ),
+                          );
+                        },
+                        style: TextButton.styleFrom(
+                          foregroundColor: BattleColors.gold,
+                        ),
+                        child: const Text(
+                          'Classic Battle (test)',
+                          style: TextStyle(fontSize: 13, letterSpacing: 1),
+                        ),
+                      ),
                       TextButton(
                         onPressed: () => SystemNavigator.pop(),
                         style: TextButton.styleFrom(
