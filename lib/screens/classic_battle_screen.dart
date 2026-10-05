@@ -575,6 +575,8 @@ class _ClassicBattleScreenState extends State<ClassicBattleScreen>
     final isActor =
         _controller.currentActor?.id == c.id && _controller.winner == null;
     if (isActor && !animating) dx += enemy ? sprite * 0.25 : -sprite * 0.25;
+    // Gold marks your champion's turn, red an enemy's.
+    final turnColor = enemy ? BattleColors.hpRed : BattleColors.gold;
 
     if (animating && c.id == _fxAttacker) {
       // Lunge toward the other side and back.
@@ -635,6 +637,35 @@ class _ClassicBattleScreenState extends State<ClassicBattleScreen>
                 ),
               ),
             ),
+            // Glowing ring under whoever's turn it is.
+            if (isActor)
+              Positioned(
+                left: sprite * 0.1,
+                right: sprite * 0.1,
+                bottom: -scale * 2.5,
+                height: scale * 6,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(sprite),
+                    border: Border.all(
+                      color: turnColor.withAlpha(0xCC),
+                      width: 1.5,
+                    ),
+                    gradient: RadialGradient(
+                      colors: [
+                        turnColor.withAlpha(0x88),
+                        turnColor.withAlpha(0x00),
+                      ],
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: turnColor.withAlpha(0x66),
+                        blurRadius: 10,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             BattleSpriteView(
               championName: c.name,
               boxSize: sprite,
@@ -674,6 +705,18 @@ class _ClassicBattleScreenState extends State<ClassicBattleScreen>
                     _HpBar(fraction: c.hp / c.maxHp),
                   ],
                 ),
+              ),
+            // Bouncing arrow over whoever's turn it is, above the enemy HP
+            // and target marker so nothing overlaps.
+            if (isActor)
+              Positioned(
+                top:
+                    -scale * 3 -
+                    (enemy ? 44 : 26) +
+                    sin(_idle.value * 2 * pi) * 3,
+                left: 0,
+                right: 0,
+                child: Center(child: _TurnMarker(color: turnColor)),
               ),
             if (targetable)
               Positioned(
@@ -1070,6 +1113,54 @@ class _ClassicBattleScreenState extends State<ClassicBattleScreen>
       ),
     );
   }
+}
+
+/// A downward arrow with a glow, floating over the champion whose turn it
+/// is.
+class _TurnMarker extends StatelessWidget {
+  const _TurnMarker({required this.color});
+
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      size: const Size(18, 14),
+      painter: _TurnMarkerPainter(color),
+    );
+  }
+}
+
+class _TurnMarkerPainter extends CustomPainter {
+  _TurnMarkerPainter(this.color);
+
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final arrow = Path()
+      ..moveTo(0, 0)
+      ..lineTo(size.width, 0)
+      ..lineTo(size.width / 2, size.height)
+      ..close();
+    canvas.drawPath(
+      arrow,
+      Paint()
+        ..color = color.withAlpha(0x99)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5),
+    );
+    canvas.drawPath(arrow, Paint()..color = color);
+    canvas.drawPath(
+      arrow,
+      Paint()
+        ..color = Colors.black
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.5,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_TurnMarkerPainter old) => old.color != color;
 }
 
 /// The small gold diamond used throughout the game's ornaments, here as
