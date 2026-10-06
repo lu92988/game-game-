@@ -1,0 +1,372 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="896"
+     viewBox="0 0 1024 896" shape-rendering="crispEdges">
+  <!-- Krogg, 128x128 frames, 8 per row. Rows: idle, attack, hurt, death,
+       victory, defend, item. Body parts are the user's original 4x4
+       sheet (krogg_128.svg); the extra frames and rows reuse them. -->
+  <defs>
+    <!-- Armor, belly, head and crown -->
+    <g id="toadCore">
+      <path fill="#102636" d="M30 37h7v-9h9v-8h12v-6h25v6h12v8h9v9h7v15h-7v9H94v7H40v-7H34v-9h-7z"/>
+      <path fill="#356e82" d="M34 37h7v-8h9v-7h12v-5h21v5h12v7h9v8h5v12h-7v8H92v6H42v-6h-9v-8h-6z"/>
+      <path fill="#5599a8" d="M40 32h8v-6h12v-5h18v5h12v6h7v9h5v7h-8v7H42v-7h-8v-7h6z"/>
+      <path fill="#102636" d="M38 28h8v-9h13v13H46v5h-8z M73 32V19h13v9h8v9h-8v-5z"/>
+      <path fill="#74b6bd" d="M41 27h8v-5h7v9h-9v4h-6z M76 22h7v5h8v8h-6v-4h-9z"/>
+      <path fill="#d4b86a" d="M46 25h7v7h-7z M77 25h7v7h-7z"/>
+      <path fill="#17232b" d="M49 26h3v5h-3z M80 26h3v5h-3z"/>
+      <path fill="#f3dda0" d="M47 25h2v2h-2z M78 25h2v2h-2z"/>
+      <path fill="#102636" d="M38 43h8v-4h37v4h9v8h-6v7H44v-7h-6z"/>
+      <path fill="#b7d3ca" d="M42 43h10v-2h25v2h10v7h-7v5H49v-5h-7z"/>
+      <path fill="#d7e5d8" d="M49 44h27v2H49z"/>
+      <path fill="#263e47" d="M48 50h30v2H48z"/>
+      <path fill="#8db5b4" d="M53 53h20v2H53z"/>
+      <path fill="#20394c" d="M54 18v-7h6v5h5V8h6v8h5v-5h6v8z"/>
+      <path fill="#7ccbd7" d="M58 13h2v4h-2z M68 10h2v6h-2z M78 13h2v4h-2z"/>
+      <path fill="#d1b66d" d="M60 17h11v3H60z"/>
+      <path fill="#102636" d="M48 59h35v9H48z"/>
+      <path fill="#263c4e" d="M31 62h13v-7h11v8h-5v9H35v-4h-5z"/>
+      <path fill="#263c4e" d="M87 55h11v7h8v9H94v5h-9v-9h-4v-6h6z"/>
+      <path fill="#688095" d="M34 62h8v-4h7v5h-5v7h-9z"/>
+      <path fill="#688095" d="M89 59h7v5h5v5h-7v5h-5z"/>
+      <path fill="#b89e61" d="M39 64h4v3h-4z M94 64h4v3h-4z"/>
+      <path fill="#102636" d="M42 64h12v-4h28v4h12v25H83v7H53v-7H42z"/>
+      <path fill="#345a70" d="M46 66h11v-3h22v3h11v18H79v6H57v-6H46z"/>
+      <path fill="#b7d3ca" d="M56 68h22v3h5v12h-5v5H56v-5h-5V71h5z"/>
+      <path fill="#d7e5d8" d="M58 70h17v2h5v8h-5v5H58v-5h-4v-8h4z"/>
+      <path fill="#8db5b4" d="M55 77h3v2h-3z M76 77h3v2h-3z"/>
+      <path fill="#172c3d" d="M43 88h49v7H43z"/>
+      <path fill="#d1b66d" d="M62 88h10v7H62z"/>
+      <path fill="#315b73" d="M53 95h29v14H53z"/>
+      <path fill="#85d9e4" d="M65 97h5v2h-5z M62 102h11v2H62z"/>
+      <path fill="#d1b66d" d="M57 95h2v11h-2z M77 95h2v11h-2z"/>
+      <path fill="#85d9e4" d="M61 82h6v2h-4v2h-4v-2h2z M68 84h5v2h-4v2h-4v-2h3z"/>
+    </g>
+
+    <g id="toadLegs">
+      <path fill="#102636" d="M42 96h20v9h-4v8h-6v5H35v-5h5v-6h2z"/>
+      <path fill="#356e82" d="M45 98h14v7h-4v8h-5v4H39v-3h5v-7h1z"/>
+      <path fill="#263c4e" d="M69 96h19v9h3v9h6v5H76v-5h-5v-7h-2z"/>
+      <path fill="#356e82" d="M72 98h13v7h3v8h5v3H78v-4h-5v-7h-1z"/>
+      <path fill="#85d9e4" d="M37 115h13v3h5v5H29v-3h8z M78 115h13v3h6v5H72v-3h6z"/>
+      <path fill="#b8d6d0" d="M34 120h8v2h-8z M78 120h8v2h-8z"/>
+      <path fill="#d1b66d" d="M43 102h13v2H43z M73 102h13v2H73z"/>
+    </g>
+
+    <g id="toadArms">
+      <path fill="#102636" d="M32 61h12v9h-5v9h-5v9h-8v-7h4v-8h4v-7h-2z"/>
+      <path fill="#356e82" d="M34 64h8v5h-5v9h-4v8h-5v-5h4v-8h3v-6h-1z"/>
+      <path fill="#263c4e" d="M27 82h8v8h-4v5h-6v-3h3v-5h-3z"/>
+      <path fill="#85d9e4" d="M26 89h7v5h-4v3h-5v-4h2z"/>
+      <path fill="#102636" d="M88 61h10v7h4v8h5v9h-7v-7h-5v-7h-7z"/>
+      <path fill="#356e82" d="M90 64h6v7h4v7h4v5h-4v-5h-5v-7h-5z"/>
+      <path fill="#263c4e" d="M99 81h8v7h-3v5h-6v-5h3z"/>
+      <path fill="#85d9e4" d="M99 89h7v5h-4v4h-5v-4h2z"/>
+      <path fill="#688095" d="M29 78h8v3h-8z M94 76h8v3h-8z"/>
+      <path fill="#d1b66d" d="M30 79h6v1h-6z M95 77h6v1h-6z"/>
+    </g>
+
+    <g id="toadShield">
+      <path fill="#102636" d="M5 59h22v4h6v29h-6v7h-5v5h-5v-5h-5v-5H7V63H5z"/>
+      <path fill="#315b73" d="M9 64h17v4h3v22h-5v6h-4v4h-2v-4h-5v-5h-4z"/>
+      <path fill="#688095" d="M10 65h3v27h4v5h-2v-4h-5z"/>
+      <path fill="#d1b66d" d="M17 70h7v3h-4v3h-3v4h-3v-4h3v-3h3v-1h-3z"/>
+      <path fill="#85d9e4" d="M16 82h4v2h-3v3h-3v-2h2z M20 84h4v2h-3v3h-3v-2h2z"/>
+    </g>
+
+    <g id="waterTrident">
+      <path fill="#172b3b" d="M104 42h5v59h-5z"/>
+      <path fill="#688095" d="M105 48h2v47h-2z"/>
+      <path fill="#d1b66d" d="M101 32h3v13h-3z M105 24h5v21h-5z M111 32h3v13h-3z"/>
+      <path fill="#85d9e4" d="M106 28h3v13h-3z"/>
+      <path fill="#172b3b" d="M101 42h13v5h-13z"/>
+      <path fill="#d1b66d" d="M102 98h9v5h-9z"/>
+      <path fill="#85d9e4" d="M105 99h3v3h-3z"/>
+    </g>
+
+    <g id="toadBase">
+      <use href="#toadLegs"/>
+      <use href="#toadShield"/>
+      <use href="#toadCore"/>
+      <use href="#toadArms"/>
+    </g>
+
+    <g id="toad">
+      <use href="#toadBase"/>
+      <use href="#waterTrident"/>
+    </g>
+
+    <!-- Body without the shield, for the defend row -->
+    <g id="toadNoShield">
+      <use href="#toadLegs"/>
+      <use href="#toadCore"/>
+      <use href="#toadArms"/>
+      <use href="#waterTrident"/>
+    </g>
+
+    <!-- Fallen pose (from the user's last death frame), without droplets -->
+    <g id="fallen">
+      <path fill="#102636" d="M13 91h31v-8h20v8h18v12H68v8H34v-5H19v-7h-6z"/>
+      <path fill="#356e82" d="M22 91h28v8H22z M47 86h20v8H47z"/>
+      <path fill="#b7d3ca" d="M43 91h23v9H43z"/>
+      <path fill="#85d9e4" d="M15 101h22v6h9v8H8v-5h7z"/>
+      <path fill="#263c4e" d="M66 91h24v10H66z"/>
+      <path fill="#356e82" d="M72 92h19v8H72z"/>
+      <path fill="#102636" d="M74 78h12v-5h18v5h8v12h-6v7H81v-5h-7z"/>
+      <path fill="#5599a8" d="M79 80h12v-3h10v4h6v8h-5v5H82v-5h-4z"/>
+      <path fill="#b7d3ca" d="M86 87h15v4H86z"/>
+      <path fill="#d4b86a" d="M84 81h5v5h-5z M99 81h5v5h-5z"/>
+      <path fill="#172936" d="M86 82h2v4h-2z M101 82h2v4h-2z"/>
+      <path fill="#20394c" d="M88 77v-7h5v5h4v-7h5v9z"/>
+      <path fill="#172b3b" d="M102 45h5v48h-5z"/>
+      <path fill="#688095" d="M103 51h2v36h-2z"/>
+      <path fill="#d1b66d" d="M99 39h3v12h-3z M103 32h5v19h-5z M109 39h3v12h-3z"/>
+      <path fill="#85d9e4" d="M104 35h3v13h-3z"/>
+    </g>
+
+    <!-- Small four-point sparkle (6x6) for magic and victory -->
+    <g id="spark">
+      <path fill="#d1b66d" d="M2 0h2v2h2v2H4v2H2V4H0V2h2z"/>
+      <path fill="#fff3c4" d="M2 2h2v2H2z"/>
+    </g>
+    <g id="waterSpark">
+      <path fill="#3aa8d4" d="M2 0h2v2h2v2H4v2H2V4H0V2h2z"/>
+      <path fill="#d7fbff" d="M2 2h2v2H2z"/>
+    </g>
+  </defs>
+
+  <!-- ================= IDLE (row 0): slow breathing bob ================= -->
+  <g transform="translate(0 0)"><use href="#toad"/></g>
+  <g transform="translate(128 0)"><g transform="translate(0 -1)"><use href="#toad"/></g></g>
+  <g transform="translate(256 0)">
+    <g transform="translate(0 -2)"><use href="#toad"/></g>
+    <path fill="#85d9e4" d="M112 38h3v5h-3z"/>
+  </g>
+  <g transform="translate(384 0)"><g transform="translate(0 -2)"><use href="#toad"/></g></g>
+  <g transform="translate(512 0)"><g transform="translate(0 -1)"><use href="#toad"/></g></g>
+  <g transform="translate(640 0)"><use href="#toad"/></g>
+  <g transform="translate(768 0)">
+    <g transform="translate(0 1)"><use href="#toad"/></g>
+    <path fill="#d7fbff" d="M114 43h3v4h-3z"/>
+  </g>
+  <g transform="translate(896 0)"><g transform="translate(0 1)"><use href="#toad"/></g></g>
+
+  <!-- ================= ATTACK (row 1): long wind-up, sweep, splash ================= -->
+  <g transform="translate(0 128)">
+    <use href="#toadBase"/>
+    <g transform="rotate(-10 92 82)"><use href="#waterTrident"/></g>
+  </g>
+  <g transform="translate(128 128)">
+    <use href="#toadBase"/>
+    <g transform="rotate(-25 92 82)"><use href="#waterTrident"/></g>
+  </g>
+  <g transform="translate(256 128)">
+    <g transform="translate(-1 0)">
+      <use href="#toadBase"/>
+      <g transform="rotate(-32 92 82)"><use href="#waterTrident"/></g>
+    </g>
+    <use href="#waterSpark" x="86" y="22"/>
+  </g>
+  <g transform="translate(384 128)">
+    <use href="#toadBase"/>
+    <g transform="rotate(-18 92 82)"><use href="#waterTrident"/></g>
+    <path fill="#85d9e4" d="M92 34h5v4h-5z M99 39h5v4h-5z"/>
+  </g>
+  <g transform="translate(512 128)">
+    <g transform="translate(1 0)">
+      <use href="#toadBase"/>
+      <g transform="rotate(2 92 82)"><use href="#waterTrident"/></g>
+    </g>
+    <path fill="#3aa8d4" d="M80 30h7v5h9v5h8v6h9v4h-6v-3h-8v-5h-8v-5h-7v-4h-4z"/>
+    <path fill="#d7fbff" d="M84 33h4v3h7v4h6v3h-5v-2h-6v-4h-6z"/>
+  </g>
+  <g transform="translate(640 128)">
+    <g transform="translate(1 0)">
+      <use href="#toadBase"/>
+      <g transform="rotate(14 92 82)"><use href="#waterTrident"/></g>
+    </g>
+    <path fill="#3aa8d4" d="M72 30h7v5h9v5h8v6h9v5h11v6h-8v-3h-9v-5h-8v-5h-9v-5h-6v-4h-4z"/>
+    <path fill="#d7fbff" d="M78 34h5v4h8v5h8v5h9v4h-6v-3h-8v-5h-8v-5h-8z"/>
+  </g>
+  <g transform="translate(768 128)">
+    <g transform="translate(1 0)">
+      <use href="#toadBase"/>
+      <g transform="rotate(23 92 82)"><use href="#waterTrident"/></g>
+    </g>
+    <path fill="#3aa8d4" d="M102 39h8v5h6v7h6v8h-5v7h-6v-5h-5v-7h-5v-8h5z"/>
+    <path fill="#85d9e4" d="M106 43h4v5h5v7h-4v-5h-5z"/>
+    <path fill="#d7fbff" d="M108 44h3v4h-3z M117 39h4v5h-4z M100 53h3v5h-3z"/>
+    <path fill="#85d9e4" d="M120 63h4v5h-4z M97 43h3v4h-3z"/>
+  </g>
+  <g transform="translate(896 128)">
+    <use href="#toadBase"/>
+    <g transform="rotate(8 92 82)"><use href="#waterTrident"/></g>
+    <path fill="#85d9e4" d="M118 66h3v4h-3z M106 74h3v4h-3z M122 78h3v4h-3z"/>
+  </g>
+
+  <!-- ================= HURT (row 2): flash, stagger back, recover ================= -->
+  <g transform="translate(0 256)"><use href="#toad"/></g>
+  <g transform="translate(128 256)">
+    <g transform="translate(-3 0)"><use href="#toad"/></g>
+    <path fill="#bd6672" d="M49 23h20v6H58v11h-9V30h-6z"/>
+    <path fill="#fff0b2" d="M92 37h5v5h-5z"/>
+  </g>
+  <g transform="translate(256 256)">
+    <g transform="translate(-4 0)"><use href="#toad"/></g>
+    <path fill="#bd6672" opacity=".55" d="M49 23h20v6H58v11h-9V30h-6z"/>
+  </g>
+  <g transform="translate(384 256)">
+    <g transform="translate(-3 0)"><use href="#toad"/></g>
+    <path fill="#85d9e4" d="M109 40h5v5h-5z M116 49h4v5h-4z"/>
+  </g>
+  <g transform="translate(512 256)">
+    <g transform="translate(-2 0)"><use href="#toad"/></g>
+    <path fill="#85d9e4" d="M112 46h4v4h-4z M118 56h4v4h-4z"/>
+  </g>
+  <g transform="translate(640 256)"><g transform="translate(-1 0)"><use href="#toad"/></g></g>
+  <g transform="translate(768 256)"><use href="#toad"/></g>
+  <g transform="translate(896 256)"><use href="#toad"/></g>
+
+  <!-- ================= DEATH (row 3): sink, topple, fall, puddle ================= -->
+  <g transform="translate(0 384)"><use href="#toad"/></g>
+  <g transform="translate(128 384)"><g transform="translate(0 3) scale(1 .97)"><use href="#toad"/></g></g>
+  <g transform="translate(256 384)"><g transform="translate(0 8) scale(1 .9)"><use href="#toad"/></g></g>
+  <g transform="translate(384 384)"><g transform="rotate(8 64 104)"><use href="#toad"/></g></g>
+  <g transform="translate(512 384)"><g transform="rotate(18 64 104)"><use href="#toad"/></g></g>
+  <g transform="translate(640 384)">
+    <g transform="translate(0 6) rotate(32 64 104)"><use href="#toad"/></g>
+    <path fill="#3aa8d4" d="M22 70h4v6h-4z M110 62h4v6h-4z"/>
+  </g>
+  <g transform="translate(768 384)">
+    <use href="#fallen"/>
+    <path fill="#3aa8d4" d="M19 78h5v8h-5z M114 77h5v8h-5z M33 71h4v6h-4z"/>
+    <path fill="#d7fbff" d="M20 79h2v4h-2z M115 78h2v4h-2z"/>
+  </g>
+  <g transform="translate(896 384)">
+    <use href="#fallen"/>
+    <path fill="#3aa8d4" opacity=".7" d="M4 116h112v4H4z"/>
+    <path fill="#85d9e4" d="M10 114h6v2h-6z M60 114h8v2h-8z M98 114h6v2h-6z"/>
+  </g>
+
+  <!-- ================= VICTORY (row 4): crouch, leap, trident raised ================= -->
+  <g transform="translate(0 512)"><use href="#toad"/></g>
+  <g transform="translate(128 512)"><g transform="translate(0 4) scale(1 .96)"><use href="#toad"/></g></g>
+  <g transform="translate(256 512)">
+    <g transform="translate(0 -6)">
+      <use href="#toadBase"/>
+      <g transform="translate(0 -10)"><use href="#waterTrident"/></g>
+    </g>
+  </g>
+  <g transform="translate(384 512)">
+    <g transform="translate(0 -10)">
+      <use href="#toadBase"/>
+      <g transform="translate(0 -14)"><use href="#waterTrident"/></g>
+    </g>
+    <use href="#spark" x="98" y="2"/>
+    <use href="#waterSpark" x="114" y="8"/>
+  </g>
+  <g transform="translate(512 512)">
+    <g transform="translate(0 -6)">
+      <use href="#toadBase"/>
+      <g transform="translate(0 -12)"><use href="#waterTrident"/></g>
+    </g>
+    <use href="#spark" x="116" y="0"/>
+  </g>
+  <g transform="translate(640 512)">
+    <g transform="translate(0 2)">
+      <use href="#toadBase"/>
+      <g transform="translate(0 -12)"><use href="#waterTrident"/></g>
+    </g>
+    <path fill="#85d9e4" d="M30 120h8v3h-8z M88 120h8v3h-8z"/>
+  </g>
+  <g transform="translate(768 512)">
+    <use href="#toadBase"/>
+    <g transform="translate(0 -14)"><use href="#waterTrident"/></g>
+    <use href="#spark" x="96" y="4"/>
+    <use href="#spark" x="116" y="12"/>
+    <use href="#waterSpark" x="88" y="18"/>
+  </g>
+  <g transform="translate(896 512)">
+    <g transform="translate(0 -1)">
+      <use href="#toadBase"/>
+      <g transform="translate(0 -14)"><use href="#waterTrident"/></g>
+    </g>
+    <use href="#spark" x="104" y="0"/>
+    <use href="#waterSpark" x="118" y="20"/>
+    <use href="#spark" x="90" y="12"/>
+  </g>
+
+  <!-- ================= DEFEND (row 5): raise shield, block, lower ================= -->
+  <g transform="translate(0 640)"><use href="#toad"/></g>
+  <g transform="translate(128 640)">
+    <use href="#toadNoShield"/>
+    <g transform="translate(16 -4)"><use href="#toadShield"/></g>
+  </g>
+  <g transform="translate(256 640)">
+    <use href="#toadNoShield"/>
+    <g transform="translate(36 -8)"><use href="#toadShield"/></g>
+  </g>
+  <g transform="translate(384 640)">
+    <g transform="translate(-3 0)">
+      <use href="#toadNoShield"/>
+      <g transform="translate(36 -8)"><use href="#toadShield"/></g>
+    </g>
+    <!-- Impact flash on the shield -->
+    <path fill="#d7fbff" d="M72 68h4v4h4v4h-4v4h-4v-4h-4v-4h4z"/>
+    <path fill="#85d9e4" d="M66 62h3v3h-3z M80 62h3v3h-3z M64 82h3v3h-3z M82 84h3v3h-3z"/>
+  </g>
+  <g transform="translate(512 640)">
+    <g transform="translate(-2 0)">
+      <use href="#toadNoShield"/>
+      <g transform="translate(36 -8)"><use href="#toadShield"/></g>
+    </g>
+    <path fill="#85d9e4" d="M62 58h3v3h-3z M84 58h3v3h-3z M60 88h3v3h-3z M86 90h3v3h-3z"/>
+  </g>
+  <g transform="translate(640 640)">
+    <g transform="translate(-1 0)">
+      <use href="#toadNoShield"/>
+      <g transform="translate(32 -6)"><use href="#toadShield"/></g>
+    </g>
+  </g>
+  <g transform="translate(768 640)">
+    <use href="#toadNoShield"/>
+    <g transform="translate(16 -4)"><use href="#toadShield"/></g>
+  </g>
+  <g transform="translate(896 640)"><use href="#toad"/></g>
+
+  <!-- ================= ITEM (row 6): gather magic, sparkles rise ================= -->
+  <g transform="translate(0 768)"><use href="#toad"/></g>
+  <g transform="translate(128 768)">
+    <g transform="translate(0 -1)"><use href="#toad"/></g>
+    <use href="#spark" x="20" y="64"/>
+  </g>
+  <g transform="translate(256 768)">
+    <g transform="translate(0 -2)"><use href="#toad"/></g>
+    <use href="#spark" x="16" y="50"/>
+    <use href="#spark" x="112" y="56"/>
+    <path fill="#d1b66d" opacity=".55" d="M30 118h70v3H30z"/>
+  </g>
+  <g transform="translate(384 768)">
+    <g transform="translate(0 -2)"><use href="#toad"/></g>
+    <use href="#spark" x="22" y="36"/>
+    <use href="#spark" x="104" y="40"/>
+    <use href="#waterSpark" x="64" y="6"/>
+    <path fill="#d1b66d" opacity=".7" d="M26 118h78v3H26z"/>
+  </g>
+  <g transform="translate(512 768)">
+    <g transform="translate(0 -2)"><use href="#toad"/></g>
+    <use href="#spark" x="28" y="22"/>
+    <use href="#spark" x="96" y="26"/>
+    <use href="#spark" x="58" y="0"/>
+    <path fill="#fff3c4" opacity=".6" d="M22 118h86v3H22z"/>
+  </g>
+  <g transform="translate(640 768)">
+    <g transform="translate(0 -1)"><use href="#toad"/></g>
+    <use href="#spark" x="34" y="8"/>
+    <use href="#spark" x="88" y="12"/>
+    <path fill="#d1b66d" opacity=".45" d="M30 118h70v3H30z"/>
+  </g>
+  <g transform="translate(768 768)">
+    <use href="#toad"/>
+    <use href="#waterSpark" x="40" y="2"/>
+  </g>
+  <g transform="translate(896 768)"><use href="#toad"/></g>
+</svg>

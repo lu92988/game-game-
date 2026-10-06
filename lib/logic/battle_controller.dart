@@ -73,6 +73,18 @@ class BattleController extends ChangeNotifier {
   /// card can flash "Super effective!" or "Resisted" along with the hit.
   ElementMatchup lastMatchup = ElementMatchup.neutral;
 
+  /// Whether the last attack was a critical hit, and whether its target had
+  /// a Defense Boost up to soften it, for the hit's on-screen effects.
+  bool lastHitCrit = false;
+  bool lastTargetDefended = false;
+
+  /// Bumped every time an item is used, like [attackNonce], with who used
+  /// it on whom, so the battle view can animate the item.
+  int itemNonce = 0;
+  String? lastItemUserId;
+  String? lastItemTargetId;
+  ItemType? lastItemType;
+
   /// The clashes being played on the current turn, front first (usually one,
   /// more when the acting champion ties with several opponents). Turns are
   /// frozen (no enemy action, no player input) until they are all dismissed
@@ -211,6 +223,8 @@ class BattleController extends ChangeNotifier {
     lastTargetId = targetLive.id;
     lastAttackerElement = actorLive.element;
     lastMatchup = result.matchup;
+    lastHitCrit = result.isCrit;
+    lastTargetDefended = targetLive.buffs.defend > 0;
     attackNonce++;
     _applyDamage(target.side, target.id, result.damage);
 
@@ -260,6 +274,11 @@ class BattleController extends ChangeNotifier {
   void useItem(GameItem item, Champion target) {
     final actor = currentActor;
     if (actor == null) return;
+
+    lastItemUserId = actor.id;
+    lastItemTargetId = target.id;
+    lastItemType = item.type;
+    itemNonce++;
 
     switch (item.type) {
       case ItemType.boost:

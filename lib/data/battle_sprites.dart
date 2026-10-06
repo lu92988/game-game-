@@ -24,25 +24,38 @@ const Map<String, String> battleSpriteImages = {};
 
 String? spriteImageFor(String championName) => battleSpriteImages[championName];
 
-/// Which row of an animation sheet to play.
-enum SpritePose { idle, attack, hurt, death }
+/// Which row of an animation sheet to play, in sheet row order. The last
+/// three are optional extras; see [SpriteSheet.rowFor].
+enum SpritePose { idle, attack, hurt, death, victory, defend, item }
 
 /// An animated sprite sheet: a grid of [frameSize] frames, [frames] per
-/// row, one row per [SpritePose] in order (idle, attack, hurt, death), on
-/// a transparent background. [facesLeft] marks art drawn facing left; it
-/// is mirrored so every champion faces the other team.
+/// row, one row per [SpritePose] in order, on a transparent background.
+/// Sheets have at least the first four rows (idle, attack, hurt, death);
+/// [rows] says how many they actually have. [facesLeft] marks art drawn
+/// facing left; it is mirrored so every champion faces the other team.
 class SpriteSheet {
   const SpriteSheet(
     this.asset, {
     this.frameSize = 32,
     this.frames = 4,
+    this.rows = 4,
     this.facesLeft = false,
   });
 
   final String asset;
   final int frameSize;
   final int frames;
+  final int rows;
   final bool facesLeft;
+
+  /// The row to play for [pose], falling back for sheets without the
+  /// optional rows: a block plays the hurt row, victory and item use idle.
+  int rowFor(SpritePose pose) {
+    if (pose.index < rows) return pose.index;
+    return pose == SpritePose.defend
+        ? SpritePose.hurt.index
+        : SpritePose.idle.index;
+  }
 }
 
 /// Animated artwork. Takes priority over [battleSpriteImages] and the
@@ -56,9 +69,15 @@ const Map<String, SpriteSheet> battleSpriteSheets = {
   'Thunderboy': SpriteSheet('assets/sprites/thunderboy.png'),
   'Robotoman': SpriteSheet('assets/sprites/robotoman.png'),
   'Riptide': SpriteSheet('assets/sprites/riptide.png'),
-  // 128x128 frames (a 512x512 sheet). The 32x32 krogg.png is kept as a
-  // backup; swap the asset and frameSize back to use it.
-  'Krogg': SpriteSheet('assets/sprites/krogg_128.png', frameSize: 128),
+  // 128x128 frames, 8 per animation, all 7 rows (art/krogg_128_full.svg,
+  // built on the user's krogg_128.svg). krogg_128.png (4x4) and the
+  // 32x32 krogg.png are kept as backups.
+  'Krogg': SpriteSheet(
+    'assets/sprites/krogg_128_full.png',
+    frameSize: 128,
+    frames: 8,
+    rows: 7,
+  ),
   'Friedrich Blitzberg': SpriteSheet('assets/sprites/friedrich_blitzberg.png'),
 };
 

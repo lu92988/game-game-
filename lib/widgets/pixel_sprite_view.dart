@@ -158,7 +158,7 @@ class BattleSpriteView extends StatelessWidget {
     Widget painted = _SheetFrame(
       sheet: sheet,
       column: frame,
-      row: pose.index,
+      row: sheet.rowFor(pose),
       boxSize: boxSize,
     );
     if (flash > 0) {

@@ -77,11 +77,34 @@ class _ClassicBattleScreenState extends State<ClassicBattleScreen>
     duration: const Duration(milliseconds: 1000),
   )..repeat();
 
+  /// Drives the item-use animation (user gathers magic, it flies to the
+  /// target), separate from attacks.
+  late final AnimationController _item = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 900),
+  );
+
+  static const _normalHit = Duration(milliseconds: 900);
+
+  /// Knockouts play in slow motion.
+  static const _knockoutHit = Duration(milliseconds: 1600);
+
   _MenuMode _mode = _MenuMode.main;
   int _lastNonce = 0;
   String? _fxAttacker;
   String? _fxTarget;
   Color _fxColor = Colors.white;
+  GameElement? _fxElement;
+
+  /// The last hit was big enough to shake the screen (critical, super
+  /// effective or a knockout).
+  bool _fxBig = false;
+  bool _fxKill = false;
+  bool _fxDefended = false;
+
+  int _lastItemNonce = 0;
+  String? _itemUser;
+  String? _itemTarget;
   final Map<String, int> _prevHp = {};
   final List<_Popup> _popups = [];
   int _popupSerial = 0;
@@ -109,7 +132,32 @@ class _ClassicBattleScreenState extends State<ClassicBattleScreen>
       _fxAttacker = c.lastAttackerId;
       _fxTarget = c.lastTargetId;
       _fxColor = c.lastAttackerElement?.color ?? Colors.white;
+      _fxElement = c.lastAttackerElement;
+      _fxDefended = c.lastTargetDefended;
+      final target = [
+        ...c.player,
+        ...c.enemy,
+      ].where((x) => x.id == c.lastTargetId).firstOrNull;
+      _fxKill = target != null && !target.alive;
+      _fxBig =
+          _fxKill || c.lastHitCrit || c.lastMatchup == ElementMatchup.advantage;
+      _act.duration = _fxKill ? _knockoutHit : _normalHit;
       _act.forward(from: 0);
+    }
+    if (c.itemNonce != _lastItemNonce) {
+      _lastItemNonce = c.itemNonce;
+      _itemUser = c.lastItemUserId;
+      _itemTarget = c.lastItemTargetId;
+      final (label, color) = switch (c.lastItemType) {
+        ItemType.boost => ('ATK UP', BattleColors.gold),
+        ItemType.defend => ('DEF UP', const Color(0xFF85D9E4)),
+        ItemType.weaken => ('WEAKENED', BattleColors.hpRed),
+        null => ('', BattleColors.cream),
+      };
+      if (_itemTarget != null && label.isNotEmpty) {
+        _addPopup(_itemTarget!, label, color, color, delay: 450);
+      }
+      _item.forward(from: 0);
     }
     for (final champ in [...c.player, ...c.enemy]) {
       final before = _prevHp[champ.id];
@@ -122,7 +170,10 @@ class _ClassicBattleScreenState extends State<ClassicBattleScreen>
           diff < 0 ? '${-diff}' : '+$diff',
           diff < 0 ? BattleColors.cream : BattleColors.hpGreen,
           diff < 0 ? _fxColor : BattleColors.hpGreen,
-          delay: diff < 0 ? 380 : 0,
+          // Matches the hit landing, which is later in slow motion.
+          delay: diff < 0
+              ? (380 * _act.duration!.inMilliseconds / 900).round()
+              : 0,
         );
       }
       _prevHp[champ.id] = champ.hp;
@@ -157,6 +208,7 @@ class _ClassicBattleScreenState extends State<ClassicBattleScreen>
     _controller.dispose();
     _act.dispose();
     _idle.dispose();
+    _item.dispose();
     super.dispose();
   }
 
@@ -521,28 +573,65 @@ class _ClassicBattleScreenState extends State<ClassicBattleScreen>
           w / (spriteSize * 5.0),
         ).clamp(1.5, 7.0).floorToDouble();
         final sprite = spriteSize * scale;
-        final children = <Widget>[
-          Positioned.fill(child: CustomPaint(painter: _BackdropPainter())),
-        ];
-        for (var i = 0; i < _controller.enemy.length; i++) {
-          final pos = _slot(i, w, h, sprite, left: true);
-          children.add(
-            _fighter(_controller.enemy[i], pos, scale, sprite, enemy: true),
-          );
-        }
-        for (var i = 0; i < _controller.player.length; i++) {
-          final pos = _slot(i, w, h, sprite, left: false);
-          children.add(
-            _fighter(_controller.player[i], pos, scale, sprite, enemy: false),
-          );
-        }
         return AnimatedBuilder(
-          animation: Listenable.merge([_act, _idle]),
-          builder: (context, _) =>
-              Stack(clipBehavior: Clip.none, children: children),
+          animation: Listenable.merge([_act, _idle, _item]),
+          builder: (context, _) {
+            // Where each fighter's body is, for effects that travel
+            // between them.
+            final centers = <String, Offset>{};
+            final children = <Widget>[
+              Positioned.fill(child: CustomPaint(painter: _BackdropPainter())),
+            ];
+            for (var i = 0; i < _controller.enemy.length; i++) {
+              final c = _controller.enemy[i];
+              final pos = _slot(i, w, h, sprite, left: true);
+              centers[c.id] = pos + Offset(sprite / 2, sprite * 0.55);
+              children.add(_fighter(c, pos, scale, sprite, enemy: true));
+            }
+            for (var i = 0; i < _controller.player.length; i++) {
+              final c = _controller.player[i];
+              final pos = _slot(i, w, h, sprite, left: false);
+              centers[c.id] = pos + Offset(sprite / 2, sprite * 0.55);
+              children.add(_fighter(c, pos, scale, sprite, enemy: false));
+            }
+            children.add(
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: CustomPaint(
+                    painter: _BattleFxPainter(
+                      attack: _act.isAnimating ? _act.value : null,
+                      from: centers[_fxAttacker],
+                      to: centers[_fxTarget],
+                      element: _fxElement,
+                      big: _fxBig,
+                      kill: _fxKill,
+                      item: _item.isAnimating ? _item.value : null,
+                      itemFrom: centers[_itemUser],
+                      itemTo: centers[_itemTarget],
+                      pixel: max(2.0, scale * 1.2),
+                    ),
+                  ),
+                ),
+              ),
+            );
+            return Transform.translate(
+              offset: _shake(scale),
+              child: Stack(clipBehavior: Clip.none, children: children),
+            );
+          },
         );
       },
     );
+  }
+
+  /// Big hits rattle the whole battlefield for a moment as they land.
+  Offset _shake(double scale) {
+    if (!_fxBig || !_act.isAnimating) return Offset.zero;
+    final t = _act.value;
+    if (t < 0.32 || t > 0.62) return Offset.zero;
+    final k = (t - 0.32) / 0.3;
+    final amp = scale * (_fxKill ? 3.5 : 2.5) * (1 - k);
+    return Offset(sin(k * 42) * amp, cos(k * 31) * amp * 0.6);
   }
 
   /// Staggered column positions: the middle fighter of each side stands a
@@ -589,9 +678,17 @@ class _ClassicBattleScreenState extends State<ClassicBattleScreen>
     }
     if (animating && c.id == _fxTarget && t > 0.32) {
       final k = ((t - 0.32) / 0.5).clamp(0.0, 1.0);
-      dx += sin(k * pi * 6) * scale * 2 * (1 - k);
-      flash = (1 - k) * 0.9;
+      // A blocked hit barely pushes the target back.
+      final push = _fxDefended ? 0.4 : 1.0;
+      dx += sin(k * pi * 6) * scale * 2 * (1 - k) * push;
+      flash = (1 - k) * (_fxDefended ? 0.4 : 0.9);
       flashColor = k < 0.3 ? Colors.white : _fxColor;
+    }
+    // The item's target glows gold as the magic reaches them.
+    final itemT = _item.value;
+    if (_item.isAnimating && c.id == _itemTarget && itemT > 0.45) {
+      flash = max(flash, 0.5 * (1 - (itemT - 0.45) / 0.55));
+      flashColor = BattleColors.gold;
     }
 
     // Which animation an animated sprite sheet plays, and how far along.
@@ -606,8 +703,15 @@ class _ClassicBattleScreenState extends State<ClassicBattleScreen>
       pose = SpritePose.attack;
       poseProgress = t;
     } else if (animating && c.id == _fxTarget && t > 0.32) {
-      pose = SpritePose.hurt;
+      pose = _fxDefended ? SpritePose.defend : SpritePose.hurt;
       poseProgress = hitProgress;
+    } else if (_item.isAnimating && c.id == _itemUser) {
+      pose = SpritePose.item;
+      poseProgress = _item.value;
+    } else if (_controller.winner == c.side) {
+      // The winning side celebrates for as long as the result is shown.
+      pose = SpritePose.victory;
+      poseProgress = _idle.value;
     }
 
     final targetable = _isTargetable(c);
@@ -1278,6 +1382,278 @@ class _DamageNumber extends StatelessWidget {
 }
 
 /// A simple pixel backdrop: dusk sky, distant mountains and a dirt field.
+/// Effects that travel across the battlefield, drawn in chunky pixels to
+/// match the sprites: each element's projectile flying from attacker to
+/// target, a burst of particles where it lands (bigger for big hits, with a
+/// white shockwave on a knockout), and a stream of sparkles for item use.
+/// [attack] and [item] are each animation's progress, or null when idle.
+class _BattleFxPainter extends CustomPainter {
+  _BattleFxPainter({
+    required this.attack,
+    required this.from,
+    required this.to,
+    required this.element,
+    required this.big,
+    required this.kill,
+    required this.item,
+    required this.itemFrom,
+    required this.itemTo,
+    required this.pixel,
+  });
+
+  final double? attack;
+  final Offset? from;
+  final Offset? to;
+  final GameElement? element;
+  final bool big;
+  final bool kill;
+  final double? item;
+  final Offset? itemFrom;
+  final Offset? itemTo;
+  final double pixel;
+
+  /// The hit lands here (fraction of the attack animation); projectiles
+  /// launch a little before it.
+  static const _launch = 0.1;
+  static const _land = 0.32;
+
+  void _block(Canvas canvas, Offset c, Color color, [double size = 1]) {
+    final s = pixel * size;
+    canvas.drawRect(
+      Rect.fromCenter(center: c, width: s, height: s),
+      Paint()
+        ..color = color
+        ..isAntiAlias = false,
+    );
+  }
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final t = attack;
+    final a = from;
+    final b = to;
+    final el = element;
+    if (t != null && a != null && b != null && el != null) {
+      if (t >= _launch && t <= _land) {
+        _projectile(canvas, a, b, (t - _launch) / (_land - _launch), el);
+      }
+      if (t > _land) _impact(canvas, b, (t - _land) / (1 - _land), el);
+    }
+    final it = item;
+    final ia = itemFrom;
+    final ib = itemTo;
+    if (it != null && ia != null && ib != null) {
+      _itemSparkles(canvas, ia, ib, it);
+    }
+  }
+
+  void _projectile(
+    Canvas canvas,
+    Offset a,
+    Offset b,
+    double p,
+    GameElement el,
+  ) {
+    final pos = Offset.lerp(a, b, p)!;
+    final dir = (b - a).dx.sign; // +1 when flying right
+    switch (el) {
+      case GameElement.water:
+        // A wave that swells as it rolls toward the target.
+        final rows = 2 + (p * 3).floor();
+        for (var r = 0; r < rows; r++) {
+          final width = 3 + r * 2;
+          for (var i = 0; i < width; i++) {
+            final x = pos.dx - dir * (i * pixel * 0.9);
+            final y =
+                pos.dy + (r - rows) * pixel + sin(i * 0.9 + p * 9) * pixel;
+            _block(
+              canvas,
+              Offset(x, y),
+              r == 0 ? const Color(0xFFD7FBFF) : const Color(0xFF3AA8D4),
+            );
+          }
+        }
+        for (var i = 0; i < 4; i++) {
+          _block(
+            canvas,
+            pos + Offset(-dir * pixel * (6 + i * 2), -pixel * (3 + i % 2 * 2)),
+            const Color(0xFF85D9E4),
+            0.7,
+          );
+        }
+      case GameElement.fire:
+        // A fireball trailing embers.
+        for (var i = 0; i < 6; i++) {
+          final back =
+              pos -
+              Offset(dir * pixel * 1.6 * i, sin(p * 20 + i) * pixel * 0.6);
+          _block(
+            canvas,
+            back,
+            i == 0
+                ? const Color(0xFFFFF3A1)
+                : (i < 3 ? const Color(0xFFFFD23F) : const Color(0xFFFF7A1A)),
+            i == 0 ? 2.4 : 2.0 - i * 0.25,
+          );
+        }
+        _block(canvas, pos, const Color(0xFFFF7A1A), 3.2);
+        _block(canvas, pos, const Color(0xFFFFD23F), 2.2);
+        _block(canvas, pos, const Color(0xFFFFF3C4), 1.1);
+      case GameElement.lightning:
+        // A jagged bolt that strikes the whole way at once and flickers.
+        if ((p * 10).floor().isEven || p > 0.6) {
+          final path = Path()..moveTo(a.dx, a.dy);
+          const segments = 7;
+          for (var i = 1; i < segments; i++) {
+            final q = Offset.lerp(a, b, i / segments)!;
+            path.lineTo(q.dx, q.dy + (i.isEven ? -1 : 1) * pixel * 3);
+          }
+          path.lineTo(b.dx, b.dy);
+          canvas.drawPath(
+            path,
+            Paint()
+              ..color = const Color(0xFFFFD23F)
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = pixel * 1.6
+              ..strokeJoin = StrokeJoin.miter,
+          );
+          canvas.drawPath(
+            path,
+            Paint()
+              ..color = const Color(0xFFFFFBE0)
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = pixel * 0.6,
+          );
+        }
+      case GameElement.earth:
+        // Rocks hurled in an arc.
+        for (var i = 0; i < 3; i++) {
+          final q = (p - i * 0.12).clamp(0.0, 1.0);
+          final rock =
+              Offset.lerp(a, b, q)! +
+              Offset(0, -sin(q * pi) * pixel * 14 + i * pixel * 2);
+          _block(canvas, rock, const Color(0xFF4A3A22), 2.6);
+          _block(
+            canvas,
+            rock + Offset(-pixel * 0.4, -pixel * 0.4),
+            const Color(0xFF8A6A3A),
+            1.4,
+          );
+        }
+      case GameElement.wind:
+        // Pale crescents of wind.
+        for (var i = 0; i < 3; i++) {
+          final q = (p - i * 0.1).clamp(0.0, 1.0);
+          final c = Offset.lerp(a, b, q)! + Offset(0, (i - 1) * pixel * 3);
+          for (var j = -2; j <= 2; j++) {
+            _block(
+              canvas,
+              c + Offset(-dir * (j * j) * pixel * 0.5, j * pixel),
+              j == 0 ? const Color(0xFFFFFFFF) : const Color(0xFFCFE3F0),
+            );
+          }
+        }
+    }
+  }
+
+  void _impact(Canvas canvas, Offset at, double k, GameElement el) {
+    if (k >= 1) return;
+    final count = big ? 22 : 12;
+    final reach = pixel * (big ? 16 : 10);
+    final colors = switch (el) {
+      GameElement.water => const [Color(0xFF3AA8D4), Color(0xFFD7FBFF)],
+      GameElement.fire => const [Color(0xFFFF7A1A), Color(0xFFFFD23F)],
+      GameElement.lightning => const [Color(0xFFFFD23F), Color(0xFFFFFBE0)],
+      GameElement.earth => const [Color(0xFF6B4A2A), Color(0xFFB08A50)],
+      GameElement.wind => const [Color(0xFFCFE3F0), Color(0xFFFFFFFF)],
+    };
+    final fade = (1 - k).clamp(0.0, 1.0);
+    for (var i = 0; i < count; i++) {
+      final angle = i * 2 * pi / count + (i.isEven ? 0.2 : -0.15);
+      final dist = reach * (0.35 + 0.65 * k) * (i % 3 == 0 ? 1.2 : 1.0);
+      // Earth and water particles fall back down; the rest fly outward.
+      final drop = (el == GameElement.earth || el == GameElement.water)
+          ? k * k * pixel * 10
+          : 0.0;
+      final c = at + Offset(cos(angle) * dist, sin(angle) * dist + drop);
+      _block(
+        canvas,
+        c,
+        colors[i % 2].withValues(alpha: fade),
+        (big ? 1.6 : 1.2) * (1 - k * 0.5),
+      );
+    }
+    if (kill && k < 0.6) {
+      // A white shockwave on a knockout.
+      canvas.drawCircle(
+        at,
+        pixel * 4 + k * pixel * 30,
+        Paint()
+          ..color = Colors.white.withValues(alpha: (1 - k / 0.6) * 0.8)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = pixel * 1.2,
+      );
+    }
+  }
+
+  void _itemSparkles(Canvas canvas, Offset a, Offset b, double t) {
+    const gold = Color(0xFFF3DDA0);
+    const bright = Color(0xFFFFFBE0);
+    if (t < 0.45) {
+      // Sparkles gather around the user...
+      final k = t / 0.45;
+      for (var i = 0; i < 8; i++) {
+        final angle = i * pi / 4 + k * 3;
+        final r = pixel * (10 - k * 6);
+        _block(
+          canvas,
+          a + Offset(cos(angle) * r, sin(angle) * r - k * pixel * 4),
+          i.isEven ? gold : bright,
+          1.1,
+        );
+      }
+    } else if (a == b) {
+      // ...then burst outward when the item is used on themselves...
+      final k = (t - 0.45) / 0.55;
+      for (var i = 0; i < 10; i++) {
+        final angle = i * pi / 5;
+        _block(
+          canvas,
+          a + Offset(cos(angle), sin(angle)) * pixel * (4 + k * 10),
+          (i.isEven ? gold : bright).withValues(alpha: 1 - k),
+          1.1,
+        );
+      }
+    } else {
+      // ...or fly to an ally (or enemy) and burst there.
+      final k = (t - 0.45) / 0.55;
+      final travel = (k / 0.5).clamp(0.0, 1.0);
+      if (k < 0.5) {
+        for (var i = 0; i < 5; i++) {
+          final q = (travel - i * 0.06).clamp(0.0, 1.0);
+          final p =
+              Offset.lerp(a, b, q)! + Offset(0, -sin(q * pi) * pixel * 10);
+          _block(canvas, p, i == 0 ? bright : gold, 1.3 - i * 0.15);
+        }
+      } else {
+        final burst = (k - 0.5) / 0.5;
+        for (var i = 0; i < 10; i++) {
+          final angle = i * pi / 5;
+          _block(
+            canvas,
+            b + Offset(cos(angle), sin(angle)) * pixel * (3 + burst * 10),
+            (i.isEven ? gold : bright).withValues(alpha: 1 - burst),
+            1.1,
+          );
+        }
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_BattleFxPainter old) => true;
+}
+
 class _BackdropPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
