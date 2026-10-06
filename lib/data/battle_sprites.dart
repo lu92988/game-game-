@@ -56,7 +56,9 @@ const Map<String, SpriteSheet> battleSpriteSheets = {
   'Thunderboy': SpriteSheet('assets/sprites/thunderboy.png'),
   'Robotoman': SpriteSheet('assets/sprites/robotoman.png'),
   'Riptide': SpriteSheet('assets/sprites/riptide.png'),
-  'Krogg': SpriteSheet('assets/sprites/krogg.png'),
+  // 128x128 frames (a 512x512 sheet). The 32x32 krogg.png is kept as a
+  // backup; swap the asset and frameSize back to use it.
+  'Krogg': SpriteSheet('assets/sprites/krogg_128.png', frameSize: 128),
   'Friedrich Blitzberg': SpriteSheet('assets/sprites/friedrich_blitzberg.png'),
 };
 
