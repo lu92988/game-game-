@@ -66,6 +66,14 @@ class _Popup {
 class _ClassicBattleScreenState extends State<ClassicBattleScreen>
     with TickerProviderStateMixin {
   late final BattleController _controller;
+
+  /// The battlefield art behind this battle, picked at random.
+  final String _backdrop = _backdrops[Random().nextInt(_backdrops.length)];
+  static const _backdrops = [
+    'assets/backdrops/castle.jpg',
+    'assets/backdrops/burning_city.jpg',
+    'assets/backdrops/forest.jpg',
+  ];
   late final AnimationController _act = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 900),
@@ -596,7 +604,36 @@ class _ClassicBattleScreenState extends State<ClassicBattleScreen>
             // between them.
             final centers = <String, Offset>{};
             final children = <Widget>[
-              Positioned.fill(child: CustomPaint(painter: _BackdropPainter())),
+              Positioned.fill(
+                child: Image.asset(
+                  _backdrop,
+                  fit: BoxFit.cover,
+                  alignment: Alignment.bottomCenter,
+                  filterQuality: FilterQuality.none,
+                  errorBuilder: (_, _, _) =>
+                      CustomPaint(painter: _BackdropPainter()),
+                ),
+              ),
+              // Darkens the ground a little so the fighters stand out
+              // against the busy art.
+              const Positioned.fill(
+                child: IgnorePointer(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Color(0x00000000),
+                          Color(0x33000000),
+                          Color(0x66000000),
+                        ],
+                        stops: [0.25, 0.5, 1],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             ];
             for (var i = 0; i < _controller.enemy.length; i++) {
               final c = _controller.enemy[i];
@@ -1406,7 +1443,6 @@ class _DamageNumber extends StatelessWidget {
   }
 }
 
-/// A simple pixel backdrop: dusk sky, distant mountains and a dirt field.
 /// Effects that travel across the battlefield, drawn in chunky pixels to
 /// match the sprites: each element's projectile flying from attacker to
 /// target, a burst of particles where it lands (bigger for big hits, with a
@@ -1679,6 +1715,8 @@ class _BattleFxPainter extends CustomPainter {
   bool shouldRepaint(_BattleFxPainter old) => true;
 }
 
+/// A simple pixel backdrop (dusk sky, distant mountains and a dirt field),
+/// shown if the battlefield art can't load.
 class _BackdropPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {

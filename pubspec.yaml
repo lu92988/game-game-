@@ -63,6 +63,7 @@ flutter:
     - assets/champions/
     - assets/scenes/
     - assets/sprites/
+    - assets/backdrops/
     - assets/sfx/
     - assets/music/
     - assets/images/
