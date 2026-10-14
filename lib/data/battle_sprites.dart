@@ -33,6 +33,8 @@ enum SpritePose { idle, attack, hurt, death, victory, defend, item }
 /// Sheets have at least the first four rows (idle, attack, hurt, death);
 /// [rows] says how many they actually have. [facesLeft] marks art drawn
 /// facing left; it is mirrored so every champion faces the other team.
+/// [scale] draws frames larger than the fighter's box, anchored at the
+/// bottom center, for sheets with roomy frames (wide attack effects).
 class SpriteSheet {
   const SpriteSheet(
     this.asset, {
@@ -40,6 +42,7 @@ class SpriteSheet {
     this.frames = 4,
     this.rows = 4,
     this.facesLeft = false,
+    this.scale = 1,
   });
 
   final String asset;
@@ -47,6 +50,7 @@ class SpriteSheet {
   final int frames;
   final int rows;
   final bool facesLeft;
+  final double scale;
 
   /// The row to play for [pose], falling back for sheets without the
   /// optional rows: a block plays the hurt row, victory and item use idle.
@@ -69,14 +73,17 @@ const Map<String, SpriteSheet> battleSpriteSheets = {
   'Thunderboy': SpriteSheet('assets/sprites/thunderboy.png'),
   'Robotoman': SpriteSheet('assets/sprites/robotoman.png'),
   'Riptide': SpriteSheet('assets/sprites/riptide.png'),
-  // 128x128 frames, 8 per animation, all 7 rows (art/krogg_128_full.svg,
-  // built on the user's krogg_128.svg). krogg_128.png (4x4) and the
-  // 32x32 krogg.png are kept as backups.
+  // 320x320 frames, 8 per animation: idle, attack, hurt, death. Cut from
+  // the user's pixel art sheet (art/sprites/krogg_source.png) by
+  // art/sprites/build_krogg.ps1; short rows are padded by repeating frames.
+  // Frames leave room for the water swirl, hence the scale.
+  // krogg_128_full.png (7 rows), krogg_128.png and the 32x32 krogg.png are
+  // kept as backups.
   'Krogg': SpriteSheet(
-    'assets/sprites/krogg_128_full.png',
-    frameSize: 128,
+    'assets/sprites/krogg_pixel.png',
+    frameSize: 320,
     frames: 8,
-    rows: 7,
+    scale: 1.7,
   ),
   'Friedrich Blitzberg': SpriteSheet('assets/sprites/friedrich_blitzberg.png'),
 };

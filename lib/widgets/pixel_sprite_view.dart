@@ -253,6 +253,7 @@ class _SheetFrameState extends State<_SheetFrame> {
           : _SheetFramePainter(
               image: image,
               frameSize: widget.sheet.frameSize,
+              scale: widget.sheet.scale,
               column: widget.column,
               row: widget.row,
             ),
@@ -264,22 +265,25 @@ class _SheetFramePainter extends CustomPainter {
   _SheetFramePainter({
     required this.image,
     required this.frameSize,
+    required this.scale,
     required this.column,
     required this.row,
   });
 
   final ui.Image image;
   final int frameSize;
+  final double scale;
   final int column;
   final int row;
 
   @override
   void paint(Canvas canvas, Size size) {
     final f = frameSize.toDouble();
+    final w = size.width * scale, h = size.height * scale;
     canvas.drawImageRect(
       image,
       Rect.fromLTWH(column * f, row * f, f, f),
-      Offset.zero & size,
+      Rect.fromLTWH((size.width - w) / 2, size.height - h, w, h),
       Paint()
         ..filterQuality = FilterQuality.none
         ..isAntiAlias = false,
@@ -288,7 +292,10 @@ class _SheetFramePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_SheetFramePainter old) =>
-      old.image != image || old.column != column || old.row != row;
+      old.image != image ||
+      old.column != column ||
+      old.row != row ||
+      old.scale != scale;
 }
 
 class _PixelSpritePainter extends CustomPainter {
