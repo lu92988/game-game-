@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 
+import '../data/attack_effects.dart';
 import '../data/battle_sprites.dart';
 import '../data/roster.dart';
 import '../logic/battle_controller.dart';
@@ -116,6 +117,9 @@ class _ClassicBattleScreenState extends State<ClassicBattleScreen>
   bool _fxKill = false;
   bool _fxDefended = false;
 
+  /// The attacker's own effect from its art, when it has one.
+  AttackEffect? _fxArt;
+
   int _lastItemNonce = 0;
   String? _itemUser;
   String? _itemTarget;
@@ -151,6 +155,11 @@ class _ClassicBattleScreenState extends State<ClassicBattleScreen>
       _fxColor = c.lastAttackerElement?.color ?? Colors.white;
       _fxElement = c.lastAttackerElement;
       _fxDefended = c.lastTargetDefended;
+      final attacker = [
+        ...c.player,
+        ...c.enemy,
+      ].where((x) => x.id == c.lastAttackerId).firstOrNull;
+      _fxArt = attacker == null ? null : attackEffects[attacker.name];
       final target = [
         ...c.player,
         ...c.enemy,
@@ -662,11 +671,14 @@ class _ClassicBattleScreenState extends State<ClassicBattleScreen>
                       itemFrom: centers[_itemUser],
                       itemTo: centers[_itemTarget],
                       pixel: max(2.0, scale * 1.2),
+                      artProjectile: _fxArt != null,
                     ),
                   ),
                 ),
               ),
             );
+            final art = _attackArt(centers, sprite);
+            if (art != null) children.add(art);
             return Transform.translate(
               offset: _shake(scale),
               child: Stack(clipBehavior: Clip.none, children: children),
@@ -674,6 +686,94 @@ class _ClassicBattleScreenState extends State<ClassicBattleScreen>
           },
         );
       },
+    );
+  }
+
+  /// The attacker's own effect from its pixel art. A beam shoots out from
+  /// the attacker and reaches the target as the hit lands, then fades; a
+  /// ground effect bursts up under the target as the hit lands.
+  Widget? _attackArt(Map<String, Offset> centers, double sprite) {
+    final fx = _fxArt;
+    final a = centers[_fxAttacker];
+    final b = centers[_fxTarget];
+    if (fx == null || a == null || b == null || !_act.isAnimating) {
+      return null;
+    }
+    final t = _act.value;
+    const launch = 0.12, land = 0.32, fadeEnd = 0.68;
+    if (t < launch || t > fadeEnd) return null;
+    final fade = t <= land + 0.1
+        ? 1.0
+        : 1 - (t - land - 0.1) / (fadeEnd - land - 0.1);
+    final aspect = fx.height / fx.width;
+
+    if (fx.ground) {
+      if (t < land - 0.04) return null;
+      final grow = ((t - land + 0.04) / 0.12).clamp(0.0, 1.0);
+      final w = sprite * 1.5;
+      final h = w * aspect;
+      // Feet of the target: its center sits at 55% of the sprite.
+      final feet = b + Offset(0, sprite * 0.45);
+      return Positioned(
+        left: feet.dx - w / 2,
+        top: feet.dy - h,
+        width: w,
+        height: h,
+        child: IgnorePointer(
+          child: Opacity(
+            opacity: fade.clamp(0.0, 1.0),
+            child: Transform(
+              alignment: Alignment.bottomCenter,
+              transform: Matrix4.diagonal3Values(
+                b.dx < a.dx ? -1.0 : 1.0,
+                grow,
+                1,
+              ),
+              child: Image.asset(
+                fx.asset,
+                fit: BoxFit.fill,
+                filterQuality: FilterQuality.none,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    // Start just in front of the attacker, end just past the target.
+    final d = b - a;
+    final dir = d / d.distance;
+    final start = a + dir * sprite * 0.3;
+    final end = b + dir * sprite * 0.25;
+    final len = (end - start).distance;
+    final h = min(len * aspect, sprite * 0.9);
+    final reveal = ((t - launch) / (land - launch)).clamp(0.0, 1.0);
+    final angle = atan2(d.dy, d.dx);
+    // Flying left would turn the art upside down, so mirror it back.
+    final transform = Matrix4.rotationZ(angle);
+    if (d.dx < 0) transform.multiply(Matrix4.diagonal3Values(1, -1, 1));
+    return Positioned(
+      left: start.dx,
+      top: start.dy - h / 2,
+      width: len,
+      height: h,
+      child: IgnorePointer(
+        child: Transform(
+          alignment: Alignment.centerLeft,
+          transform: transform,
+          child: Opacity(
+            opacity: fade.clamp(0.0, 1.0),
+            child: ClipRect(
+              clipper: _RevealClipper(reveal),
+              child: Image.asset(
+                fx.asset,
+                fit: BoxFit.fill,
+                filterQuality: FilterQuality.none,
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -1460,7 +1560,11 @@ class _BattleFxPainter extends CustomPainter {
     required this.itemFrom,
     required this.itemTo,
     required this.pixel,
+    this.artProjectile = false,
   });
+
+  /// The attacker's art draws its own projectile, so skip the generic one.
+  final bool artProjectile;
 
   final double? attack;
   final Offset? from;
@@ -1495,7 +1599,7 @@ class _BattleFxPainter extends CustomPainter {
     final b = to;
     final el = element;
     if (t != null && a != null && b != null && el != null) {
-      if (t >= _launch && t <= _land) {
+      if (!artProjectile && t >= _launch && t <= _land) {
         _projectile(canvas, a, b, (t - _launch) / (_land - _launch), el);
       }
       if (t > _land) _impact(canvas, b, (t - _land) / (1 - _land), el);
@@ -1776,4 +1880,18 @@ class _BackdropPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_BackdropPainter old) => false;
+}
+
+/// Shows the left [fraction] of its child, so a beam can shoot out.
+class _RevealClipper extends CustomClipper<Rect> {
+  _RevealClipper(this.fraction);
+
+  final double fraction;
+
+  @override
+  Rect getClip(Size size) =>
+      Rect.fromLTWH(0, 0, size.width * fraction, size.height);
+
+  @override
+  bool shouldReclip(_RevealClipper old) => old.fraction != fraction;
 }

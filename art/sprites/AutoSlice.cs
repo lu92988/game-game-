@@ -168,6 +168,12 @@ public static class AutoSlice {
         return frames;
     }
 
+    // An attack effect (beam, projectile or ground spikes) drawn beside the
+    // frames, keyed out and cropped tight.
+    public static Bitmap Effect(int x0, int x1, int y0, int y1) {
+        return Strip(x0, x1, y0, y1, 0, 0, 0);
+    }
+
     static Bitmap Strip(int x0, int x1, int y0, int y1, int cell, int left, int pad) {
         int w = x1 - x0, h = y1 - y0;
         var a = new int[w * h];
@@ -226,11 +232,22 @@ public static class AutoSlice {
             if (speck || line || sliver) continue;
             foreach (int i in comps[c]) keep[i] = true;
         }
-        int minx = w, maxx = -1, maxy = -1;
+        int minx = w, maxx = -1, miny = h, maxy = -1;
         for (int i = 0; i < keep.Length; i++) {
             if (!keep[i] || Dist(a[i]) <= Thr + 20) continue;
             int x = i % w, y = i / w;
-            if (x < minx) minx = x; if (x > maxx) maxx = x; if (y > maxy) maxy = y;
+            if (x < minx) minx = x; if (x > maxx) maxx = x; if (y < miny) miny = y; if (y > maxy) maxy = y;
+        }
+        if (cell <= 0) {
+            // Effect mode: the kept pixels, cropped tight.
+            if (maxx < 0) return new Bitmap(1, 1, PixelFormat.Format32bppArgb);
+            var e = new Bitmap(maxx - minx + 1, maxy - miny + 1, PixelFormat.Format32bppArgb);
+            for (int i = 0; i < keep.Length; i++) {
+                if (!keep[i]) continue;
+                int tx = i % w - minx, ty = i / w - miny;
+                if (tx >= 0 && tx < e.Width && ty >= 0 && ty < e.Height) e.SetPixel(tx, ty, Color.FromArgb(a[i] | unchecked((int)0xFF000000)));
+            }
+            return e;
         }
         var b = new Bitmap(cell, cell, PixelFormat.Format32bppArgb);
         if (maxx < 0) return b;

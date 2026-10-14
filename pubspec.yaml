@@ -64,6 +64,7 @@ flutter:
     - assets/scenes/
     - assets/sprites/
     - assets/backdrops/
+    - assets/effects/
     - assets/sfx/
     - assets/music/
     - assets/images/
