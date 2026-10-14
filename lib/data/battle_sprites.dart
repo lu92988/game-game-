@@ -24,68 +24,104 @@ const Map<String, String> battleSpriteImages = {};
 
 String? spriteImageFor(String championName) => battleSpriteImages[championName];
 
-/// Which row of an animation sheet to play, in sheet row order. The last
-/// three are optional extras; see [SpriteSheet.rowFor].
-enum SpritePose { idle, attack, hurt, death, victory, defend, item }
+/// An animation a fighter can play. Every sheet has idle, attack, hurt and
+/// death; the rest are optional extras, see [SpriteSheet.rowFor].
+enum SpritePose { idle, attack, hurt, death, victory, defend, item, heal }
 
 /// An animated sprite sheet: a grid of [frameSize] frames, [frames] per
-/// row, one row per [SpritePose] in order, on a transparent background.
-/// Sheets have at least the first four rows (idle, attack, hurt, death);
-/// [rows] says how many they actually have. [facesLeft] marks art drawn
-/// facing left; it is mirrored so every champion faces the other team.
-/// [scale] draws frames larger than the fighter's box, anchored at the
-/// bottom center, for sheets with roomy frames (wide attack effects).
+/// row, on a transparent background. [poses] lists what each row holds, in
+/// order, and always includes idle, attack, hurt and death. [facesLeft]
+/// marks art drawn facing left; it is mirrored so every champion faces the
+/// other team. [scale] draws frames larger than the fighter's box, anchored
+/// at the bottom center, for sheets with roomy frames (wide attack effects).
 class SpriteSheet {
   const SpriteSheet(
     this.asset, {
     this.frameSize = 32,
     this.frames = 4,
-    this.rows = 4,
+    this.poses = basicPoses,
     this.facesLeft = false,
     this.scale = 1,
   });
 
+  static const basicPoses = [
+    SpritePose.idle,
+    SpritePose.attack,
+    SpritePose.hurt,
+    SpritePose.death,
+  ];
+
   final String asset;
   final int frameSize;
   final int frames;
-  final int rows;
+  final List<SpritePose> poses;
   final bool facesLeft;
   final double scale;
 
-  /// The row to play for [pose], falling back for sheets without the
-  /// optional rows: a block plays the hurt row, victory and item use idle.
+  /// The row to play for [pose], falling back for sheets without it: a
+  /// block plays the hurt row, a heal the attack row (casting), and
+  /// victory and item use idle.
   int rowFor(SpritePose pose) {
-    if (pose.index < rows) return pose.index;
-    return pose == SpritePose.defend
-        ? SpritePose.hurt.index
-        : SpritePose.idle.index;
+    final row = poses.indexOf(pose);
+    if (row >= 0) return row;
+    return poses.indexOf(switch (pose) {
+      SpritePose.defend => SpritePose.hurt,
+      SpritePose.heal => SpritePose.attack,
+      _ => SpritePose.idle,
+    });
   }
 }
 
+/// One of the user's pixel art sheets, cut by art/sprites/build_sheets.ps1
+/// (Krogg's by build_krogg.ps1) from `art/sprites/<name>_source.png`: 320x320
+/// frames, 8 per animation, short animations padded by repeating frames.
+/// Frames leave room for wide attack effects, so [scale] blows them up until
+/// every champion stands about as tall as Krogg.
+SpriteSheet _pixel(String file, double scale, {bool heals = false}) =>
+    SpriteSheet(
+      'assets/sprites/${file}_pixel.png',
+      frameSize: 320,
+      frames: 8,
+      scale: scale,
+      poses: heals ? _withHeal : SpriteSheet.basicPoses,
+    );
+
+const _withHeal = [
+  SpritePose.idle,
+  SpritePose.attack,
+  SpritePose.heal,
+  SpritePose.hurt,
+  SpritePose.death,
+];
+
 /// Animated artwork. Takes priority over [battleSpriteImages] and the
-/// hand-drawn grids. The source SVGs live in `art/sprites/`.
-const Map<String, SpriteSheet> battleSpriteSheets = {
-  // Drawn with the sword on the left, so mirrored to point it at the foe.
-  'Demon Knight': SpriteSheet(
-    'assets/sprites/demon_knight.png',
-    facesLeft: true,
-  ),
-  'Thunderboy': SpriteSheet('assets/sprites/thunderboy.png'),
-  'Robotoman': SpriteSheet('assets/sprites/robotoman.png'),
-  'Riptide': SpriteSheet('assets/sprites/riptide.png'),
-  // 320x320 frames, 8 per animation: idle, attack, hurt, death. Cut from
-  // the user's pixel art sheet (art/sprites/krogg_source.png) by
-  // art/sprites/build_krogg.ps1; short rows are padded by repeating frames.
-  // Frames leave room for the water swirl, hence the scale.
-  // krogg_128_full.png (7 rows), krogg_128.png and the 32x32 krogg.png are
-  // kept as backups.
-  'Krogg': SpriteSheet(
-    'assets/sprites/krogg_pixel.png',
-    frameSize: 320,
-    frames: 8,
-    scale: 1.7,
-  ),
-  'Friedrich Blitzberg': SpriteSheet('assets/sprites/friedrich_blitzberg.png'),
+/// hand-drawn grids. The old 32x32 sheets (demon_knight.png, krogg_128*.png
+/// etc.) are kept in assets/sprites/ as backups.
+final Map<String, SpriteSheet> battleSpriteSheets = {
+  'Krogg': _pixel('krogg', 1.7),
+  'Windhorn': _pixel('windhorn', 2.15),
+  'Voltgraven': _pixel('voltgraven', 2.09),
+  'Magmus': _pixel('magmus', 2.16),
+  'Robotoman': _pixel('robotoman', 1.75),
+  'Demon Knight': _pixel('demon_knight', 1.64),
+  'Ironbark': _pixel('ironbark', 2.15),
+  'Thundric': _pixel('thundric', 1.81),
+  'Riptide': _pixel('riptide', 1.9),
+  'Vaelric': _pixel('vaelric', 2.06),
+  'Nyx': _pixel('nyx', 1.9),
+  'Mourn': _pixel('mourn', 1.78),
+  'Friedrich Blitzberg': _pixel('friedrich_blitzberg', 1.8),
+  'Tocho': _pixel('tocho', 1.76, heals: true),
+  'Elowen': _pixel('elowen', 1.93, heals: true),
+  'Elder Shen': _pixel('elder_shen', 2.24, heals: true),
+  'Cardinal Ashworth': _pixel('cardinal_ashworth', 2.06, heals: true),
+  'Thalassar': _pixel('thalassar', 2.26, heals: true),
+  'Omnes': _pixel('omnes', 2.3, heals: true),
+  // Its third row is "Reality Manipulation", played as its heal.
+  'The Cosmic Eye': _pixel('cosmic_eye', 2.26, heals: true),
+  'The Hollow Shepherd': _pixel('hollow_shepherd', 2.41, heals: true),
+  // Not redrawn yet: the user's 32x32 sheet.
+  'Thunderboy': const SpriteSheet('assets/sprites/thunderboy.png'),
 };
 
 SpriteSheet? spriteSheetFor(String championName) =>

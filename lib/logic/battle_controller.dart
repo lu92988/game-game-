@@ -85,6 +85,12 @@ class BattleController extends ChangeNotifier {
   String? lastItemTargetId;
   ItemType? lastItemType;
 
+  /// Bumped every time a healer heals, with who healed whom, so the battle
+  /// view can play the healer's heal animation.
+  int healNonce = 0;
+  String? lastHealerId;
+  String? lastHealTargetId;
+
   /// The clashes being played on the current turn, front first (usually one,
   /// more when the acting champion ties with several opponents). Turns are
   /// frozen (no enemy action, no player input) until they are all dismissed
@@ -263,6 +269,9 @@ class BattleController extends ChangeNotifier {
   void _performHeal(Champion actor, Champion target) {
     final actorLive = findChampion(_sideList(actor.side), actor.id)!;
     const healAmt = healAmount;
+    lastHealerId = actor.id;
+    lastHealTargetId = target.id;
+    healNonce++;
     _updateChampion(
       target.side,
       target.id,

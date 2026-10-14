@@ -84,6 +84,12 @@ class _ClassicBattleScreenState extends State<ClassicBattleScreen>
     duration: const Duration(milliseconds: 900),
   );
 
+  /// Drives a healer's heal animation.
+  late final AnimationController _heal = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1100),
+  );
+
   static const _normalHit = Duration(milliseconds: 900);
 
   /// Knockouts play in slow motion.
@@ -105,6 +111,9 @@ class _ClassicBattleScreenState extends State<ClassicBattleScreen>
   int _lastItemNonce = 0;
   String? _itemUser;
   String? _itemTarget;
+  int _lastHealNonce = 0;
+  String? _healer;
+  String? _healTarget;
   final Map<String, int> _prevHp = {};
   final List<_Popup> _popups = [];
   int _popupSerial = 0;
@@ -159,6 +168,12 @@ class _ClassicBattleScreenState extends State<ClassicBattleScreen>
       }
       _item.forward(from: 0);
     }
+    if (c.healNonce != _lastHealNonce) {
+      _lastHealNonce = c.healNonce;
+      _healer = c.lastHealerId;
+      _healTarget = c.lastHealTargetId;
+      _heal.forward(from: 0);
+    }
     for (final champ in [...c.player, ...c.enemy]) {
       final before = _prevHp[champ.id];
       if (before != null && before != champ.hp) {
@@ -209,6 +224,7 @@ class _ClassicBattleScreenState extends State<ClassicBattleScreen>
     _act.dispose();
     _idle.dispose();
     _item.dispose();
+    _heal.dispose();
     super.dispose();
   }
 
@@ -574,7 +590,7 @@ class _ClassicBattleScreenState extends State<ClassicBattleScreen>
         ).clamp(1.5, 7.0).floorToDouble();
         final sprite = spriteSize * scale;
         return AnimatedBuilder(
-          animation: Listenable.merge([_act, _idle, _item]),
+          animation: Listenable.merge([_act, _idle, _item, _heal]),
           builder: (context, _) {
             // Where each fighter's body is, for effects that travel
             // between them.
@@ -690,6 +706,12 @@ class _ClassicBattleScreenState extends State<ClassicBattleScreen>
       flash = max(flash, 0.5 * (1 - (itemT - 0.45) / 0.55));
       flashColor = BattleColors.gold;
     }
+    // The heal's target glows green as the healing lands.
+    final healT = _heal.value;
+    if (_heal.isAnimating && c.id == _healTarget && healT > 0.5) {
+      flash = max(flash, 0.5 * (1 - (healT - 0.5) / 0.5));
+      flashColor = BattleColors.hpGreen;
+    }
 
     // Which animation an animated sprite sheet plays, and how far along.
     // The hit lands at about a third of the way through the attack.
@@ -705,6 +727,9 @@ class _ClassicBattleScreenState extends State<ClassicBattleScreen>
     } else if (animating && c.id == _fxTarget && t > 0.32) {
       pose = _fxDefended ? SpritePose.defend : SpritePose.hurt;
       poseProgress = hitProgress;
+    } else if (_heal.isAnimating && c.id == _healer) {
+      pose = SpritePose.heal;
+      poseProgress = _heal.value;
     } else if (_item.isAnimating && c.id == _itemUser) {
       pose = SpritePose.item;
       poseProgress = _item.value;
