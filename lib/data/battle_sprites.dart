@@ -77,14 +77,18 @@ class SpriteSheet {
 /// frames, 8 per animation, short animations padded by repeating frames.
 /// Frames leave room for wide attack effects, so [scale] blows them up until
 /// every champion stands about as tall as Krogg.
-SpriteSheet _pixel(String file, double scale, {bool heals = false}) =>
-    SpriteSheet(
-      'assets/sprites/${file}_pixel.png',
-      frameSize: 320,
-      frames: 8,
-      scale: scale,
-      poses: heals ? _withHeal : SpriteSheet.basicPoses,
-    );
+SpriteSheet _pixel(
+  String file,
+  double scale, {
+  bool heals = false,
+  List<SpritePose>? poses,
+}) => SpriteSheet(
+  'assets/sprites/${file}_pixel.png',
+  frameSize: 320,
+  frames: 8,
+  scale: scale,
+  poses: poses ?? (heals ? _withHeal : SpriteSheet.basicPoses),
+);
 
 const _withHeal = [
   SpritePose.idle,
@@ -120,8 +124,26 @@ final Map<String, SpriteSheet> battleSpriteSheets = {
   // Its third row is "Reality Manipulation", played as its heal.
   'The Cosmic Eye': _pixel('cosmic_eye', 2.26, heals: true),
   'The Hollow Shepherd': _pixel('hollow_shepherd', 2.41, heals: true),
-  // Not redrawn yet: the user's 32x32 sheet.
-  'Thunderboy': const SpriteSheet('assets/sprites/thunderboy.png'),
+  'Forest Child': _pixel('forest_child', 2.32),
+  'Kaelvorn the Sovereign': _pixel('kaelvorn', 1.78),
+  'Gao Feng': _pixel('gao_feng', 2.24),
+  'Nova': _pixel('nova', 2.15),
+  // Its "Earth Shield" row plays when it blocks a hit.
+  'Oorgath': _pixel(
+    'oorgath',
+    2.56,
+    poses: const [
+      SpritePose.idle,
+      SpritePose.attack,
+      SpritePose.hurt,
+      SpritePose.death,
+      SpritePose.defend,
+    ],
+  ),
+  'Vorkath': _pixel('vorkath', 2.13),
+  'Talonfire': _pixel('talonfire', 2.16),
+  'Doku': _pixel('doku', 2.28),
+  'Thunderboy': _pixel('thunderboy', 2.32),
 };
 
 SpriteSheet? spriteSheetFor(String championName) =>

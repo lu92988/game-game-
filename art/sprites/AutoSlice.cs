@@ -10,6 +10,10 @@ using System.Runtime.InteropServices;
 public static class AutoSlice {
     static int[] px; static int W, H; static int bgR, bgG, bgB;
     public static int Thr = 12;
+    // Trapped background pockets: how close to the background color, and how
+    // many pixels a patch needs before it is cleared.
+    public static int PocketThr = 4;
+    public static int PocketMin = 60;
 
     public static string Load(string path) {
         var b = new Bitmap(path);
@@ -179,6 +183,19 @@ public static class AutoSlice {
             if (x < w - 1) push(i + 1);
             if (y > 0) push(i - w);
             if (y < h - 1) push(i + w);
+        }
+        // Pockets of background trapped inside the drawing (between legs,
+        // under arms): sizable patches of near-pure background color.
+        var pocketSeen = new bool[w * h];
+        for (int s = 0; s < w * h; s++) {
+            if (bg[s] || pocketSeen[s] || Dist(a[s]) > PocketThr) continue;
+            var pocket = new List<int>(); var pq = new Queue<int>(); pq.Enqueue(s); pocketSeen[s] = true;
+            while (pq.Count > 0) {
+                int i = pq.Dequeue(); pocket.Add(i); int x = i % w, y = i / w;
+                foreach (int n in new[] { x > 0 ? i - 1 : -1, x < w - 1 ? i + 1 : -1, y > 0 ? i - w : -1, y < h - 1 ? i + w : -1 })
+                    if (n >= 0 && !bg[n] && !pocketSeen[n] && Dist(a[n]) <= PocketThr) { pocketSeen[n] = true; pq.Enqueue(n); }
+            }
+            if (pocket.Count >= PocketMin) foreach (int i in pocket) bg[i] = true;
         }
         // 8-connected pieces with their size and bounds.
         var comps = new List<List<int>>(); var info = new List<int[]>();
