@@ -14,6 +14,7 @@ import '../widgets/arena_background.dart';
 import '../widgets/ornate_divider.dart';
 import '../widgets/section_label.dart';
 import 'battle_screen.dart';
+import 'classic_battle_screen.dart';
 
 /// Lets the player pick their 3 champions before a battle. The enemy team
 /// is still drafted at random (from whatever's left) once the battle starts.
@@ -37,11 +38,16 @@ class _DraftScreenState extends State<DraftScreen> {
     });
   }
 
-  void _begin() {
+  /// Starts the battle with the picked team: the pixel art battle, or the
+  /// card battle when [cards] is true.
+  void _begin({bool cards = false}) {
     MusicController.instance.ensureStarted();
+    final picks = List.of(_picks);
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => BattleScreen(playerPicks: List.of(_picks)),
+        builder: (_) => cards
+            ? BattleScreen(playerPicks: picks)
+            : ClassicBattleScreen(playerPicks: picks),
       ),
     );
   }
@@ -169,6 +175,15 @@ class _DraftScreenState extends State<DraftScreen> {
                         ),
                       ),
                       child: const Text('Begin Battle'),
+                    ),
+                    const SizedBox(height: 4),
+                    TextButton(
+                      onPressed: ready ? () => _begin(cards: true) : null,
+                      style: TextButton.styleFrom(
+                        foregroundColor: BattleColors.gold,
+                        disabledForegroundColor: BattleColors.dim,
+                      ),
+                      child: const Text('Card Battle'),
                     ),
                     const SizedBox(height: 24),
                   ],
