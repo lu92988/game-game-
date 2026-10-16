@@ -70,10 +70,31 @@ class _ClassicBattleScreenState extends State<ClassicBattleScreen>
 
   /// The battlefield art behind this battle, picked at random.
   final String _backdrop = _backdrops[Random().nextInt(_backdrops.length)];
+
+  /// Darkens the backdrop to about 70% and mixes in 25% gray, which also
+  /// lowers its contrast.
+  static const _backdropDim = <double>[
+    0.70 * 0.75 + 0.25 * 0.299 * 0.70,
+    0.25 * 0.587 * 0.70,
+    0.25 * 0.114 * 0.70,
+    0,
+    0, //
+    0.25 * 0.299 * 0.70,
+    0.70 * 0.75 + 0.25 * 0.587 * 0.70,
+    0.25 * 0.114 * 0.70,
+    0,
+    0, //
+    0.25 * 0.299 * 0.70,
+    0.25 * 0.587 * 0.70,
+    0.70 * 0.75 + 0.25 * 0.114 * 0.70,
+    0,
+    0, //
+    0, 0, 0, 1, 0, //
+  ];
   static const _backdrops = [
-    'assets/backdrops/castle.jpg',
-    'assets/backdrops/burning_city.jpg',
-    'assets/backdrops/forest.jpg',
+    'assets/backdrops/castle.png',
+    'assets/backdrops/burning_city.png',
+    'assets/backdrops/forest.png',
   ];
   late final AnimationController _act = AnimationController(
     vsync: this,
@@ -613,14 +634,34 @@ class _ClassicBattleScreenState extends State<ClassicBattleScreen>
             // between them.
             final centers = <String, Offset>{};
             final children = <Widget>[
+              // The backdrop is pixelated to match the sprites (see
+              // art/backdrops/build_backdrops.ps1), then dimmed and
+              // desaturated a little so the fighters read in front of it.
               Positioned.fill(
-                child: Image.asset(
-                  _backdrop,
-                  fit: BoxFit.cover,
-                  alignment: Alignment.bottomCenter,
-                  filterQuality: FilterQuality.none,
-                  errorBuilder: (_, _, _) =>
-                      CustomPaint(painter: _BackdropPainter()),
+                child: ColorFiltered(
+                  colorFilter: const ColorFilter.matrix(_backdropDim),
+                  child: Image.asset(
+                    _backdrop,
+                    fit: BoxFit.cover,
+                    alignment: Alignment.bottomCenter,
+                    filterQuality: FilterQuality.none,
+                    errorBuilder: (_, _, _) =>
+                        CustomPaint(painter: _BackdropPainter()),
+                  ),
+                ),
+              ),
+              // Vignette: darker toward the edges and corners.
+              const Positioned.fill(
+                child: IgnorePointer(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: RadialGradient(
+                        radius: 0.85,
+                        colors: [Color(0x00000000), Color(0x8C000000)],
+                        stops: [0.45, 1],
+                      ),
+                    ),
+                  ),
                 ),
               ),
               // Darkens the ground a little so the fighters stand out
@@ -671,6 +712,9 @@ class _ClassicBattleScreenState extends State<ClassicBattleScreen>
                       itemFrom: centers[_itemUser],
                       itemTo: centers[_itemTarget],
                       pixel: max(2.0, scale * 1.2),
+                      // One art pixel of the sprites on screen (their
+                      // blocks are about 2 sheet pixels at ~1.9x scale).
+                      grain: max(1.0, sprite / 84),
                       artProjectile: _fxArt != null,
                     ),
                   ),
@@ -890,16 +934,25 @@ class _ClassicBattleScreenState extends State<ClassicBattleScreen>
         child: Stack(
           clipBehavior: Clip.none,
           children: [
-            // Shadow under the feet.
+            // Soft oval shadow under the feet, grounding the fighter.
             Positioned(
-              left: sprite * 0.25,
-              right: sprite * 0.25,
-              bottom: -scale,
+              left: sprite * 0.2,
+              right: sprite * 0.2,
+              bottom: -scale * 1.2,
               height: scale * 3,
               child: DecoratedBox(
                 decoration: BoxDecoration(
-                  color: Colors.black.withAlpha(0x66),
-                  borderRadius: BorderRadius.circular(sprite),
+                  color: const Color(0x99000000),
+                  borderRadius: BorderRadius.all(
+                    Radius.elliptical(sprite, scale * 1.5),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0x99000000),
+                      blurRadius: scale * 2.5,
+                      spreadRadius: scale * 0.5,
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -1560,8 +1613,14 @@ class _BattleFxPainter extends CustomPainter {
     required this.itemFrom,
     required this.itemTo,
     required this.pixel,
+    required this.grain,
     this.artProjectile = false,
   });
+
+  /// One art pixel of the sprites on screen. The element projectiles and
+  /// hit sparks are drawn in blocks this size so they look like part of the
+  /// same pixel art; [pixel] sets their overall size.
+  final double grain;
 
   /// The attacker's art draws its own projectile, so skip the generic one.
   final bool artProjectile;
@@ -1591,6 +1650,87 @@ class _BattleFxPainter extends CustomPainter {
         ..isAntiAlias = false,
     );
   }
+
+  /// One art-pixel block (or a few, [size] across), snapped to the grain.
+  void _dot(Canvas canvas, Offset c, Color color, [double size = 1]) {
+    final s = grain * size;
+    canvas.drawRect(
+      Rect.fromLTWH(
+        ((c.dx - s / 2) / grain).roundToDouble() * grain,
+        ((c.dy - s / 2) / grain).roundToDouble() * grain,
+        s,
+        s,
+      ),
+      Paint()
+        ..color = color
+        ..isAntiAlias = false,
+    );
+  }
+
+  /// A straight run of art pixels from [a] to [b].
+  void _run(Canvas canvas, Offset a, Offset b, Color color, [double size = 1]) {
+    final steps = max(1, ((b - a).distance / grain).ceil());
+    for (var i = 0; i <= steps; i++) {
+      _dot(canvas, Offset.lerp(a, b, i / steps)!, color, size);
+    }
+  }
+
+  /// A filled circle of art pixels, shaded from [rings].first at the edge to
+  /// [rings].last in the middle.
+  void _disc(Canvas canvas, Offset c, double r, List<Color> rings) {
+    for (var y = -r; y <= r; y += grain) {
+      for (var x = -r; x <= r; x += grain) {
+        final d = sqrt(x * x + y * y) / r;
+        if (d > 1) continue;
+        final i = ((1 - d) * rings.length).floor().clamp(0, rings.length - 1);
+        _dot(canvas, c + Offset(x, y), rings[i]);
+      }
+    }
+  }
+
+  // The gold of the sprites' lightning: dark amber glow, gold, pale core.
+  static const _boltGlow = Color(0x998A4B00);
+  static const _boltGold = Color(0xFFFFB627);
+  static const _boltCore = Color(0xFFFFF4C2);
+
+  /// The kinks of a jagged bolt from [a] to [b]: uneven segments that
+  /// wander up to [jag] either side, so it forks and snaps like real
+  /// lightning rather than zigzagging evenly.
+  List<Offset> _boltPath(Offset a, Offset b, Random rnd, double jag) {
+    final d = b - a;
+    final len = d.distance;
+    if (len < 1) return [a, b];
+    final normal = Offset(-d.dy, d.dx) / len;
+    final pts = [a];
+    var along = 0.0, side = 0.0;
+    while (true) {
+      along += grain * (5 + rnd.nextDouble() * 12);
+      if (along >= len) break;
+      side = (side + (rnd.nextDouble() * 2 - 1) * jag * 0.9).clamp(-jag, jag);
+      pts.add(a + d * (along / len) + normal * side);
+    }
+    return pts..add(b);
+  }
+
+  /// Draws a bolt in three passes, like the sprites' lightning: a wide
+  /// amber glow, a gold body and a thin pale core.
+  void _bolt(Canvas canvas, List<Offset> pts, double alpha, [double w = 1]) {
+    for (final (color, size) in [
+      (_boltGlow, 3.0 * w),
+      (_boltGold, 2.0 * w),
+      (_boltCore, 1.0),
+    ]) {
+      final c = color.withValues(alpha: color.a * alpha);
+      for (var i = 0; i + 1 < pts.length; i++) {
+        _run(canvas, pts[i], pts[i + 1], c, size);
+      }
+    }
+  }
+
+  /// A fresh random pattern for each flicker [step] of an effect, the same
+  /// on every repaint within that step.
+  Random _flicker(Offset at, int step) =>
+      Random(at.dx.round() * 7919 + at.dy.round() * 104729 + step);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -1647,48 +1787,59 @@ class _BattleFxPainter extends CustomPainter {
           );
         }
       case GameElement.fire:
-        // A fireball trailing embers.
-        for (var i = 0; i < 6; i++) {
+        // A shaded fireball with a flickering flame tail and embers.
+        final rnd = _flicker(a, (p * 14).floor());
+        for (var i = 5; i >= 1; i--) {
           final back =
               pos -
-              Offset(dir * pixel * 1.6 * i, sin(p * 20 + i) * pixel * 0.6);
-          _block(
+              Offset(
+                dir * pixel * 1.3 * i,
+                (rnd.nextDouble() - 0.5) * pixel * 0.8,
+              );
+          _disc(canvas, back, pixel * (1.5 - i * 0.2), const [
+            Color(0xCC7A1E0A),
+            Color(0xFFE0541A),
+            Color(0xFFFFA02E),
+          ]);
+        }
+        _disc(canvas, pos, pixel * 1.9, const [
+          Color(0xFF7A1E0A),
+          Color(0xFFE0541A),
+          Color(0xFFFFA02E),
+          Color(0xFFFFE07A),
+          Color(0xFFFFF8D6),
+        ]);
+        for (var i = 0; i < 8; i++) {
+          _dot(
             canvas,
-            back,
-            i == 0
-                ? const Color(0xFFFFF3A1)
-                : (i < 3 ? const Color(0xFFFFD23F) : const Color(0xFFFF7A1A)),
-            i == 0 ? 2.4 : 2.0 - i * 0.25,
+            pos -
+                Offset(
+                  dir * pixel * (2 + rnd.nextDouble() * 7),
+                  (rnd.nextDouble() - 0.5) * pixel * 4,
+                ),
+            i.isEven ? const Color(0xFFFFD23F) : const Color(0xFFFF7A1A),
           );
         }
-        _block(canvas, pos, const Color(0xFFFF7A1A), 3.2);
-        _block(canvas, pos, const Color(0xFFFFD23F), 2.2);
-        _block(canvas, pos, const Color(0xFFFFF3C4), 1.1);
       case GameElement.lightning:
-        // A jagged bolt that strikes the whole way at once and flickers.
-        if ((p * 10).floor().isEven || p > 0.6) {
-          final path = Path()..moveTo(a.dx, a.dy);
-          const segments = 7;
-          for (var i = 1; i < segments; i++) {
-            final q = Offset.lerp(a, b, i / segments)!;
-            path.lineTo(q.dx, q.dy + (i.isEven ? -1 : 1) * pixel * 3);
+        // A jagged gold bolt that cracks out from the attacker to the
+        // target, re-forking as it flickers, like the sprites' lightning.
+        final step = (p * 9).floor();
+        if (step.isEven || p > 0.55) {
+          final rnd = _flicker(a, step);
+          final head = Offset.lerp(a, b, min(1.0, p * 1.8))!;
+          final main = _boltPath(a, head, rnd, pixel * 2);
+          _bolt(canvas, main, 1, 1.6);
+          // Thinner forks off the main bolt.
+          for (var f = 0; f < 3 && main.length > 3; f++) {
+            final from = main[1 + rnd.nextInt(main.length - 2)];
+            final d = head - a;
+            final angle =
+                atan2(d.dy, d.dx) +
+                (rnd.nextBool() ? 1 : -1) * (0.5 + rnd.nextDouble() * 0.6);
+            final reach = d.distance * (0.12 + rnd.nextDouble() * 0.12);
+            final to = from + Offset(cos(angle), sin(angle)) * reach;
+            _bolt(canvas, _boltPath(from, to, rnd, pixel * 1.2), 0.85, 0.6);
           }
-          path.lineTo(b.dx, b.dy);
-          canvas.drawPath(
-            path,
-            Paint()
-              ..color = const Color(0xFFFFD23F)
-              ..style = PaintingStyle.stroke
-              ..strokeWidth = pixel * 1.6
-              ..strokeJoin = StrokeJoin.miter,
-          );
-          canvas.drawPath(
-            path,
-            Paint()
-              ..color = const Color(0xFFFFFBE0)
-              ..style = PaintingStyle.stroke
-              ..strokeWidth = pixel * 0.6,
-          );
         }
       case GameElement.earth:
         // Rocks hurled in an arc.
@@ -1706,17 +1857,24 @@ class _BattleFxPainter extends CustomPainter {
           );
         }
       case GameElement.wind:
-        // Pale crescents of wind.
+        // Pale crescent blades of wind, thick in the middle, with streaks.
         for (var i = 0; i < 3; i++) {
           final q = (p - i * 0.1).clamp(0.0, 1.0);
           final c = Offset.lerp(a, b, q)! + Offset(0, (i - 1) * pixel * 3);
-          for (var j = -2; j <= 2; j++) {
-            _block(
-              canvas,
-              c + Offset(-dir * (j * j) * pixel * 0.5, j * pixel),
-              j == 0 ? const Color(0xFFFFFFFF) : const Color(0xFFCFE3F0),
-            );
+          final r = pixel * (3.2 - i * 0.6);
+          for (var deg = -70; deg <= 70; deg += 6) {
+            final th = deg * pi / 180;
+            final edge = 1 - (deg.abs() / 70);
+            final at = c + Offset(dir * cos(th) * r - dir * r, sin(th) * r);
+            _dot(canvas, at, const Color(0xCC8FB8CF), 1 + edge * 1.5);
+            _dot(canvas, at, const Color(0xFFFFFFFF), 0.5 + edge);
           }
+          _run(
+            canvas,
+            c - Offset(dir * r * 0.6, 0),
+            c - Offset(dir * r * 2.6, 0),
+            const Color(0x99CFE3F0),
+          );
         }
     }
   }
@@ -1733,20 +1891,41 @@ class _BattleFxPainter extends CustomPainter {
       GameElement.wind => const [Color(0xFFCFE3F0), Color(0xFFFFFFFF)],
     };
     final fade = (1 - k).clamp(0.0, 1.0);
-    for (var i = 0; i < count; i++) {
-      final angle = i * 2 * pi / count + (i.isEven ? 0.2 : -0.15);
-      final dist = reach * (0.35 + 0.65 * k) * (i % 3 == 0 ? 1.2 : 1.0);
+    if (el == GameElement.lightning) {
+      // Crackling bolts burst out of the target and flicker away.
+      final rnd = _flicker(at, (k * 10).floor());
+      final arms = big ? 8 : 6;
+      final grow = 1 - pow(1 - k, 3).toDouble();
+      for (var i = 0; i < arms; i++) {
+        final angle = i * 2 * pi / arms + rnd.nextDouble() * 0.6;
+        final len = reach * (0.4 + 0.8 * grow) * (0.7 + rnd.nextDouble() * 0.5);
+        final end = at + Offset(cos(angle), sin(angle)) * len;
+        _bolt(canvas, _boltPath(at, end, rnd, pixel * 1.4), fade, 0.7);
+      }
+      if (k < 0.3) {
+        _disc(canvas, at, pixel * (big ? 4 : 3) * (1 - k / 0.3), [
+          _boltGlow,
+          _boltGold,
+          _boltCore,
+        ]);
+      }
+    }
+    // Sparks in the sprites' grain: a bright head with a darker tail.
+    final sparks = (count * 1.5).round();
+    final scatter = _flicker(at, -1);
+    for (var i = 0; i < sparks; i++) {
+      final angle = i * 2 * pi / sparks + (scatter.nextDouble() - 0.5) * 0.5;
+      final dist =
+          reach * (0.35 + 0.65 * k) * (0.6 + scatter.nextDouble() * 0.7);
       // Earth and water particles fall back down; the rest fly outward.
       final drop = (el == GameElement.earth || el == GameElement.water)
           ? k * k * pixel * 10
           : 0.0;
-      final c = at + Offset(cos(angle) * dist, sin(angle) * dist + drop);
-      _block(
-        canvas,
-        c,
-        colors[i % 2].withValues(alpha: fade),
-        (big ? 1.6 : 1.2) * (1 - k * 0.5),
-      );
+      final dirv = Offset(cos(angle), sin(angle));
+      final c = at + dirv * dist + Offset(0, drop);
+      final s = (big ? 3.0 : 2.0) * (1 - k * 0.5);
+      _dot(canvas, c - dirv * grain * s, colors[0].withValues(alpha: fade), s);
+      _dot(canvas, c, colors[1].withValues(alpha: fade), s);
     }
     if (kill && k < 0.6) {
       // A white shockwave on a knockout.

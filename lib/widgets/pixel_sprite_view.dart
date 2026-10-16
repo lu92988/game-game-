@@ -155,10 +155,11 @@ class BattleSpriteView extends StatelessWidget {
       0,
       sheet.frames - 1,
     );
+    final (column, row) = sheet.cell(pose, frame);
     Widget painted = _SheetFrame(
       sheet: sheet,
-      column: frame,
-      row: sheet.rowFor(pose),
+      column: column,
+      row: row,
       boxSize: boxSize,
     );
     if (flash > 0) {
@@ -280,10 +281,35 @@ class _SheetFramePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final f = frameSize.toDouble();
     final w = size.width * scale, h = size.height * scale;
+    final src = Rect.fromLTWH(column * f, row * f, f, f);
+    final dst = Rect.fromLTWH((size.width - w) / 2, size.height - h, w, h);
+    // A dark outline about one art pixel block wide (blocks are about two
+    // sheet pixels) so the fighter stands out from the busy backdrop: the
+    // frame's silhouette drawn in near-black, nudged all eight ways.
+    final o = max(1.0, w / f * 1.6);
+    final outline = Paint()
+      ..filterQuality = FilterQuality.none
+      ..isAntiAlias = false
+      ..colorFilter = const ColorFilter.mode(
+        Color(0xD90A0810),
+        BlendMode.srcIn,
+      );
+    for (final d in const [
+      Offset(-1, 0),
+      Offset(1, 0),
+      Offset(0, -1),
+      Offset(0, 1),
+      Offset(-1, -1),
+      Offset(1, -1),
+      Offset(-1, 1),
+      Offset(1, 1),
+    ]) {
+      canvas.drawImageRect(image, src, dst.shift(d * o), outline);
+    }
     canvas.drawImageRect(
       image,
-      Rect.fromLTWH(column * f, row * f, f, f),
-      Rect.fromLTWH((size.width - w) / 2, size.height - h, w, h),
+      src,
+      dst,
       Paint()
         ..filterQuality = FilterQuality.none
         ..isAntiAlias = false,

@@ -232,6 +232,9 @@ public static class AutoSlice {
             if (speck || line || sliver) continue;
             foreach (int i in comps[c]) keep[i] = true;
         }
+        var alpha = new int[w * h];
+        for (int i = 0; i < alpha.Length; i++) alpha[i] = 255;
+        if (Halo) StripHalo(a, keep, alpha, w, h);
         int minx = w, maxx = -1, miny = h, maxy = -1;
         for (int i = 0; i < keep.Length; i++) {
             if (!keep[i] || Dist(a[i]) <= Thr + 20) continue;
@@ -255,9 +258,76 @@ public static class AutoSlice {
         for (int i = 0; i < keep.Length; i++) {
             if (!keep[i]) continue;
             int tx = i % w + ox, ty = i / w + oy;
-            if (tx >= 0 && tx < cell && ty >= 0 && ty < cell) b.SetPixel(tx, ty, Color.FromArgb(a[i] | unchecked((int)0xFF000000)));
+            if (tx >= 0 && tx < cell && ty >= 0 && ty < cell) b.SetPixel(tx, ty, Color.FromArgb(alpha[i], Color.FromArgb(a[i])));
         }
         return b;
+    }
+
+    // Some sheets have a glow baked in as a hard, opaque rim (red, olive and
+    // mottled brown around the body) that shows as an outline on the
+    // backdrops. With Halo on, rim pixels reachable from the background
+    // without crossing the body (dark outline, gray stone, bright lava) are
+    // dropped, and the ones touching the body stay as a faint glow.
+    public static bool Halo = false;
+    public static int HaloDepth = 24;
+    public static int HaloGlow = 70;
+
+    static bool HaloLike(int c) {
+        int r = (c >> 16) & 255, g = (c >> 8) & 255, b = c & 255;
+        int mx = Math.Max(r, Math.Max(g, b)), mn = Math.Min(r, Math.Min(g, b));
+        if (mx < 40) return false;
+        double sat = (mx - mn) / (double)mx;
+        if (r >= 120 && g < 0.35 * r && b < 0.35 * r) return true;   // red rim
+        if (mx < 190 && g >= 0.7 * r && b < 0.55 * g && sat > 0.4) return true;   // olive rim
+        if (mx < 150 && sat > 0.3) return true;   // dim mottled glow
+        if (mx < 80) return true;   // dim gray haze inside the rim
+        return false;
+    }
+
+    static void StripHalo(int[] a, bool[] keep, int[] alpha, int w, int h) {
+        var depth = new int[w * h];
+        var q = new Queue<int>();
+        for (int i = 0; i < keep.Length; i++) {
+            if (!keep[i] || !HaloLike(a[i])) continue;
+            int x = i % w, y = i / w;
+            bool edge = x == 0 || y == 0 || x == w - 1 || y == h - 1 || !keep[i - 1] || !keep[i + 1] || !keep[i - w] || !keep[i + w];
+            // Pure red is always rim, even when walled in by an attack blast.
+            int r = (a[i] >> 16) & 255, g = (a[i] >> 8) & 255, b = a[i] & 255;
+            if (edge || (r >= 150 && g < 0.12 * r && b < 0.12 * r)) { depth[i] = 1; q.Enqueue(i); }
+        }
+        while (q.Count > 0) {
+            int i = q.Dequeue(), x = i % w, y = i / w;
+            if (depth[i] >= HaloDepth) continue;
+            foreach (int n in new[] { x > 0 ? i - 1 : -1, x < w - 1 ? i + 1 : -1, y > 0 ? i - w : -1, y < h - 1 ? i + w : -1 })
+                if (n >= 0 && keep[n] && depth[n] == 0 && HaloLike(a[n])) { depth[n] = depth[i] + 1; q.Enqueue(n); }
+        }
+        for (int i = 0; i < keep.Length; i++) {
+            if (depth[i] == 0) continue;
+            int x = i % w, y = i / w;
+            bool touchesBody = false;
+            foreach (int n in new[] { x > 0 ? i - 1 : -1, x < w - 1 ? i + 1 : -1, y > 0 ? i - w : -1, y < h - 1 ? i + w : -1 })
+                if (n >= 0 && keep[n] && depth[n] == 0) touchesBody = true;
+            if (touchesBody) alpha[i] = HaloGlow; else keep[i] = false;
+        }
+        // Scraps the rim used to join to the body are now loose: keep only
+        // pieces of at least 5% of the biggest.
+        var seen = new bool[w * h]; var pieces = new List<List<int>>();
+        for (int s = 0; s < w * h; s++) {
+            if (!keep[s] || seen[s]) continue;
+            var p = new List<int>(); var pq = new Queue<int>(); pq.Enqueue(s); seen[s] = true;
+            while (pq.Count > 0) {
+                int i = pq.Dequeue(); p.Add(i); int x = i % w, y = i / w;
+                for (int dy = -1; dy <= 1; dy++) for (int dx = -1; dx <= 1; dx++) {
+                    int nx = x + dx, ny = y + dy;
+                    if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
+                    int n = ny * w + nx;
+                    if (keep[n] && !seen[n]) { seen[n] = true; pq.Enqueue(n); }
+                }
+            }
+            pieces.Add(p);
+        }
+        int big = pieces.Count == 0 ? 0 : pieces.Max(p => p.Count);
+        foreach (var p in pieces) if (p.Count < 0.05 * big) foreach (int i in p) keep[i] = false;
     }
 }
 

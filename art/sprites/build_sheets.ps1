@@ -1,13 +1,18 @@
 ﻿# Cuts the user's ChatGPT pixel art sheets (art/sprites/<name>_source.png)
 # into game sprite sheets (assets/sprites/<name>_pixel.png): 320px frames,
-# 8 per row, one row per animation in the order listed. Frame starts are found
-# automatically (AutoSlice.Anchors) unless a row gives them. Run with
-# -Only <name> to rebuild one, -Preview <dir> to also write previews on gray.
+# 16 per animation (the drawn frames plus tweened in-betweens, see Tween.cs),
+# laid out as two rows of 8, one animation after another in the order listed.
+# Frame starts are found automatically (AutoSlice.Anchors) unless a row gives
+# them. Run with -Only <name> to rebuild one, -Preview <dir> to also write
+# previews on gray.
 param([string]$Only = '', [string]$Preview = '')
 $root = Split-Path (Split-Path (Split-Path $MyInvocation.MyCommand.Path))
 Add-Type -Path "$root\art\sprites\AutoSlice.cs" -ReferencedAssemblies System.Drawing
+Add-Type -Path "$root\art\sprites\Tween.cs" -ReferencedAssemblies System.Drawing
 Add-Type -AssemblyName System.Drawing
-$cell = 320; $attackLeft = 100; $pad = 6
+$cell = 320; $attackLeft = 100; $pad = 6; $frames = 16; $perRow = 8
+# Sheets whose glow is baked in as a hard rim (see AutoSlice.StripHalo).
+$haloSheets = @('robotoman')
 
 # Frame-count range per animation, and how much of the band (from the bottom)
 # is used to find gaps between frames.
@@ -53,19 +58,21 @@ $sheets = [ordered]@{
   thunderboy          = @(@('idle', 45, 160, 255, 1015), @('attack', 205, 320, 255, 1985, @(260,400,540,700,850,1000,1150,1270,1400,1560,1700)), @('hurt', 540, 650, 250, 845), @('death', 540, 650, 900, 1985))
 }
 
-# Picks 8 of n frames: idle loops, everything else spreads evenly and ends
-# on the last frame.
-function Pick8($frames, $kind) {
-  $n = $frames.Count
-  0..7 | % { if ($kind -eq 'idle' -and $n -lt 8) { $frames[$_ % $n] } else { $frames[[math]::Round($_ * ($n - 1) / 7)] } }
+# Each move: its drawn frames with an in-between after each, spread over
+# $frames frames. Idle is slow and subtle, where the blended in-betweens just
+# look foggy, so it loops its drawn frames only, each held longer.
+function Smooth($drawn, $kind) {
+  if ($kind -eq 'idle') { return [Tween]::Pick($drawn, $frames, $true) }
+  [Tween]::Pick([Tween]::Expand($drawn, $false), $frames, $false)
 }
 
 foreach ($name in $sheets.Keys) {
   if ($Only -and $name -ne $Only) { continue }
+  [AutoSlice]::Halo = $haloSheets -contains $name
   [void][AutoSlice]::Load("$root\art\sprites\${name}_source.png")
   [void][AutoSlice]::EraseLabels()
   $rows = $sheets[$name]
-  $sheet = New-Object System.Drawing.Bitmap (8 * $cell), ($rows.Count * $cell), ([System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
+  $sheet = New-Object System.Drawing.Bitmap ($perRow * $cell), ($rows.Count * $frames / $perRow * $cell), ([System.Drawing.Imaging.PixelFormat]::Format32bppArgb)
   $g = [System.Drawing.Graphics]::FromImage($sheet)
   $log = @()
   for ($r = 0; $r -lt $rows.Count; $r++) {
@@ -74,10 +81,10 @@ foreach ($name in $sheets.Keys) {
     $anchors = if ($rows[$r].Count -gt 5) { [int[]]$rows[$r][5] } else { [AutoSlice]::Anchors($x0, $x1, $y0, $y1, $k[0], $k[1], $k[2]) }
     $anchors = [AutoSlice]::Refine($anchors, $y0, $y1, 25)
     $left = if ($kind -eq 'attack') { $attackLeft } else { -1 }
-    $frames = [AutoSlice]::Row($anchors, $x1, $y0, $y1, $cell, $left, $pad)
+    $drawn = [AutoSlice]::Row($anchors, $x1, $y0, $y1, $cell, $left, $pad)
     $log += "$kind $($anchors.Count): $($anchors -join ',') -> $x1"
     $c = 0
-    foreach ($f in (Pick8 $frames $kind)) { $g.DrawImageUnscaled($f, $c * $cell, $r * $cell); $c++ }
+    foreach ($f in (Smooth $drawn $kind)) { $g.DrawImageUnscaled($f, ($c % $perRow) * $cell, ($r * $frames / $perRow + [math]::Floor($c / $perRow)) * $cell); $c++ }
   }
   $sheet.Save("$root\assets\sprites\${name}_pixel.png", [System.Drawing.Imaging.ImageFormat]::Png)
   if ($Preview) {
@@ -87,8 +94,8 @@ foreach ($name in $sheets.Keys) {
     $pg.InterpolationMode = 'NearestNeighbor'
     $pg.DrawImage($sheet, 0, 0, $p.Width, $p.Height)
     $pen = New-Object System.Drawing.Pen ([System.Drawing.Color]::Magenta), 1
-    for ($i = 0; $i -le 8; $i++) { $pg.DrawLine($pen, $i * $cell / 2, 0, $i * $cell / 2, $p.Height) }
-    for ($i = 0; $i -le $rows.Count; $i++) { $pg.DrawLine($pen, 0, $i * $cell / 2, $p.Width, $i * $cell / 2) }
+    for ($i = 0; $i -le $perRow; $i++) { $pg.DrawLine($pen, $i * $cell / 2, 0, $i * $cell / 2, $p.Height) }
+    for ($i = 0; $i -le $sheet.Height / $cell; $i++) { $pg.DrawLine($pen, 0, $i * $cell / 2, $p.Width, $i * $cell / 2) }
     $p.Save("$Preview\$name.png"); $p.Dispose()
   }
   "$name  " + ($log -join '  |  ')

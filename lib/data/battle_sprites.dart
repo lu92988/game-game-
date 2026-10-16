@@ -28,10 +28,11 @@ String? spriteImageFor(String championName) => battleSpriteImages[championName];
 /// death; the rest are optional extras, see [SpriteSheet.rowFor].
 enum SpritePose { idle, attack, hurt, death, victory, defend, item, heal }
 
-/// An animated sprite sheet: a grid of [frameSize] frames, [frames] per
-/// row, on a transparent background. [poses] lists what each row holds, in
-/// order, and always includes idle, attack, hurt and death. [facesLeft]
-/// marks art drawn facing left; it is mirrored so every champion faces the
+/// An animated sprite sheet: a grid of [frameSize] frames on a transparent
+/// background, [columns] per row, each animation [frames] long (so it spans
+/// frames / columns rows). [poses] lists the animations in sheet order, and
+/// always includes idle, attack, hurt and death. [facesLeft] marks art drawn
+/// facing left; it is mirrored so every champion faces the
 /// other team. [scale] draws frames larger than the fighter's box, anchored
 /// at the bottom center, for sheets with roomy frames (wide attack effects).
 class SpriteSheet {
@@ -39,10 +40,11 @@ class SpriteSheet {
     this.asset, {
     this.frameSize = 32,
     this.frames = 4,
+    int? columns,
     this.poses = basicPoses,
     this.facesLeft = false,
     this.scale = 1,
-  });
+  }) : columns = columns ?? frames;
 
   static const basicPoses = [
     SpritePose.idle,
@@ -54,9 +56,14 @@ class SpriteSheet {
   final String asset;
   final int frameSize;
   final int frames;
+  final int columns;
   final List<SpritePose> poses;
   final bool facesLeft;
   final double scale;
+
+  /// Where frame [frame] of [pose] sits in the grid.
+  (int column, int row) cell(SpritePose pose, int frame) =>
+      (frame % columns, rowFor(pose) * (frames ~/ columns) + frame ~/ columns);
 
   /// The row to play for [pose], falling back for sheets without it: a
   /// block plays the hurt row, a heal the attack row (casting), and
@@ -74,7 +81,8 @@ class SpriteSheet {
 
 /// One of the user's pixel art sheets, cut by art/sprites/build_sheets.ps1
 /// (Krogg's by build_krogg.ps1) from `art/sprites/<name>_source.png`: 320x320
-/// frames, 8 per animation, short animations padded by repeating frames.
+/// frames, 16 per animation in two rows of 8: the drawn frames with tweened
+/// in-betweens, spread out to fill.
 /// Frames leave room for wide attack effects, so [scale] blows them up until
 /// every champion stands about as tall as Krogg.
 SpriteSheet _pixel(
@@ -85,7 +93,8 @@ SpriteSheet _pixel(
 }) => SpriteSheet(
   'assets/sprites/${file}_pixel.png',
   frameSize: 320,
-  frames: 8,
+  frames: 16,
+  columns: 8,
   scale: scale,
   poses: poses ?? (heals ? _withHeal : SpriteSheet.basicPoses),
 );
@@ -102,7 +111,8 @@ const _withHeal = [
 /// hand-drawn grids. The old 32x32 sheets (demon_knight.png, krogg_128*.png
 /// etc.) are kept in assets/sprites/ as backups.
 final Map<String, SpriteSheet> battleSpriteSheets = {
-  'Krogg': _pixel('krogg', 1.7),
+  // A tank: drawn about 30% bigger than everyone else (1.7 matched them).
+  'Krogg': _pixel('krogg', 2.2),
   'Windhorn': _pixel('windhorn', 2.15),
   'Voltgraven': _pixel('voltgraven', 2.09),
   'Magmus': _pixel('magmus', 2.16),
